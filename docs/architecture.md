@@ -655,7 +655,7 @@ small-voice-project/
 ├── scripts/                    # 運用スクリプト
 │   ├── seed_db.py              # 初期データ投入（組織、ユーザー、テストデータ）
 │   ├── generate_test_data.py   # テストデータ生成（CSV出力）
-│   ├── generate_new_forms_test_data.py  # 新フォーム形式のテストデータ生成
+│   ├── generate_forms_test_data.py  # フォーム形式のテストデータ生成
 │   ├── reset_db_clean.py       # DB初期化
 │   └── deploy_prod.sh          # 本番デプロイスクリプト
 ├── nginx/                      # 本番環境のNginx設定
@@ -851,6 +851,6 @@ Next.js 13+ のApp Routerを使用したページ構成。
   - 初期データ投入（組織、ユーザー、テストアンケート、雑談投稿）
   - 複雑な組織階層（部署・プロジェクト）とユーザーの多重所属シナリオ
 - **`generate_test_data.py`**
-- **`generate_new_forms_test_data.py`**
+- **`generate_forms_test_data.py`**
 - **`reset_db_clean.py`**
 - **`deploy_prod.sh`**
