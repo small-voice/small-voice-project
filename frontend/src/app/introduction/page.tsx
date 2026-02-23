@@ -344,12 +344,16 @@ export default function LandingPage() {
             <Play className="w-6 h-6 text-sage-600" />
             🎬 デモ動画
           </h2>
-          <div className="aspect-video w-full bg-slate-100 rounded-2xl border-2 border-dashed border-slate-300 flex items-center justify-center text-slate-400">
-            <div className="text-center">
-              <Play className="w-12 h-12 mx-auto mb-2 opacity-50" />
-              <p className="font-medium">Coming Soon...</p>
-              <p className="text-sm">デモ動画は後ほど公開予定です</p>
-            </div>
+          <div className="aspect-video w-full rounded-2xl overflow-hidden shadow-lg border border-sage-200 bg-black">
+            <iframe
+              width="100%"
+              height="100%"
+              src="https://www.youtube.com/embed/lhdkhxH_XnM"
+              title="Small Voice Demo"
+              frameBorder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowFullScreen
+            ></iframe>
           </div>
         </section>
 
