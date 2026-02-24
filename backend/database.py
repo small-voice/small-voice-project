@@ -215,6 +215,7 @@ class Policy(Base):
     issue_id = Column(String, nullable=True) # 紐づく課題のIDまたはタイトル
     title = Column(String) # 政策名
     description = Column(Text) # 説明
+    priority = Column(String, default="medium") # 優先順位: high, medium, low
     todos = Column(JSON) # 実現までのtodo: [{"task": "...", "assignee": "...", "deadline": "...", "completed": false}]
     created_at = Column(DateTime, default=now_jst)
     updated_at = Column(DateTime, default=now_jst, onupdate=now_jst)

@@ -28,6 +28,7 @@ export interface PolicyItem {
   issue_id: string | null;
   title: string;
   description: string;
+  priority: string;
   todos: any; // Can be a string or parsed JSON object depending on how it's sent
   created_at: string;
 }

@@ -260,9 +260,15 @@ function SessionDetailContent() {
     setExpandedPolicyIds(prev => prev.includes(id) ? prev.filter(p => p !== id) : [...prev, id]);
   };
 
-  const [policyForm, setPolicyForm] = useState({
+  const [policyForm, setPolicyForm] = useState<{
+    title: string;
+    description: string;
+    priority: string;
+    todos: any[];
+  }>({
     title: '',
     description: '',
+    priority: 'medium',
     todos: [{ task: '', assignee: '', start_date: '', deadline: '', completed: false }]
   });
 
@@ -273,13 +279,23 @@ function SessionDetailContent() {
   // Gantt Chart State
   const [ganttMonths, setGanttMonths] = useState<Record<number, Date>>({});
 
+  // todosがJSON文字列の場合も配列として扱うヘルパー
+  const parseTodos = (todos: any): any[] => {
+    if (Array.isArray(todos)) return todos;
+    if (typeof todos === 'string') {
+      try { return JSON.parse(todos); } catch { return []; }
+    }
+    return [];
+  };
+
   const handleEditPolicyClick = (policy: any, e: React.MouseEvent) => {
     e.stopPropagation();
     setEditPolicyId(policy.id);
     setEditPolicyForm({
       title: policy.title,
       description: policy.description || '',
-      todos: policy.todos || []
+      priority: policy.priority || 'medium',
+      todos: parseTodos(policy.todos)
     });
     if (!expandedPolicyIds.includes(policy.id)) {
       setExpandedPolicyIds(prev => [...prev, policy.id]);
@@ -299,6 +315,7 @@ function SessionDetailContent() {
         issue_id: null,
         title: editPolicyForm.title,
         description: editPolicyForm.description,
+        priority: editPolicyForm.priority,
         todos: editPolicyForm.todos
       }, { withCredentials: true });
 
@@ -358,7 +375,7 @@ function SessionDetailContent() {
   };
 
   const handleToggleTodo = async (policy: any, todoIndex: number) => {
-    const newTodos = [...policy.todos];
+    const newTodos = [...parseTodos(policy.todos)];
     newTodos[todoIndex].completed = !newTodos[todoIndex].completed;
 
     setIsUpdating(true);
@@ -367,6 +384,7 @@ function SessionDetailContent() {
         issue_id: policy.issue_id,
         title: policy.title,
         description: policy.description,
+        priority: policy.priority || 'medium',
         todos: newTodos
       }, { withCredentials: true });
 
@@ -441,10 +459,11 @@ function SessionDetailContent() {
         issue_id: null,
         title: policyForm.title,
         description: policyForm.description,
+        priority: policyForm.priority,
         todos: policyForm.todos,
       }, { withCredentials: true });
 
-      setPolicyForm({ title: '', description: '', todos: [{ task: '', assignee: '', start_date: '', deadline: '', completed: false }] });
+      setPolicyForm({ title: '', description: '', priority: 'medium', todos: [{ task: '', assignee: '', start_date: '', deadline: '', completed: false }] });
       setIsCreatingPolicy(false);
 
       const res = await axios.get(`/api/dashboard/sessions/${id}`, { withCredentials: true });
@@ -626,7 +645,7 @@ function SessionDetailContent() {
   // Check Permissions
   const isAdmin = user?.role === 'admin' || user?.role === 'system_admin' || user?.org_role === 'admin';
 
-  const sessionPolicies = data.policies || [];
+  const sessionPolicies = [...(data.policies || [])].sort((a: any, b: any) => b.id - a.id);
 
   return (
     <div className="h-full flex flex-col bg-slate-50">
@@ -689,7 +708,7 @@ function SessionDetailContent() {
 
               {isMenuOpen && (
                 <>
-                  <div className="fixed inset-0 z-40" onClick={() => setIsMenuOpen(false)} />
+                  <div className="fixed inset-0 z-40" onClick={() => setIsMenuOpen(false)}></div>
                   <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-xl border border-slate-100 z-50 overflow-hidden">
                     <button
                       onClick={handlePublishToggle}
@@ -976,114 +995,130 @@ function SessionDetailContent() {
               <div className="bg-slate-50 border border-sage-200 rounded-lg p-4 md:p-6 shadow-sm animate-in fade-in slide-in-from-top-2 relative z-20 mb-6">
                 <h4 className="text-sm font-bold text-sage-800 mb-4 border-b border-sage-200/50 pb-2">新しい政策を立案する</h4>
                 <div className="space-y-4">
-                  <div>
-                    <label className="block text-xs font-bold text-slate-600 mb-1">政策名称 <span className="text-red-500">*</span></label>
-                    <input
-                      type="text"
-                      value={policyForm.title}
-                      onChange={e => setPolicyForm({ ...policyForm, title: e.target.value })}
-                      placeholder="例: 会議のガイドライン制定"
-                      className="w-full text-sm p-2.5 rounded border border-slate-300 focus:outline-none focus:ring-2 focus:ring-sage-500/50"
-                    />
+                  <div className="flex gap-4">
+                    <div className="flex-1">
+                      <label className="block text-xs font-bold text-slate-600 mb-1">政策名称</label>
+                      <input
+                        type="text"
+                        value={policyForm.title}
+                        onChange={e => setPolicyForm({ ...policyForm, title: e.target.value })}
+                        placeholder="例: 社内コミュニケーションの活性化"
+                        className="w-full text-sm p-3 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-sage-500/50 transition-all"
+                      />
+                    </div>
+                    <div className="w-32">
+                      <label className="block text-xs font-bold text-slate-600 mb-1">優先順位</label>
+                      <select
+                        value={policyForm.priority}
+                        onChange={e => setPolicyForm({ ...policyForm, priority: e.target.value })}
+                        className={`w-full text-sm p-3 rounded-lg border focus:outline-none focus:ring-2 focus:ring-sage-500/50 transition-all appearance-none font-bold text-center ${policyForm.priority === 'high'
+                          ? 'bg-red-100/80 border-red-300 text-red-700'
+                          : policyForm.priority === 'low'
+                            ? 'bg-blue-100/80 border-blue-300 text-blue-700'
+                            : 'bg-yellow-100/80 border-yellow-300 text-yellow-700'
+                          }`}
+                      >
+                        <option value="high">高</option>
+                        <option value="medium">中</option>
+                        <option value="low">低</option>
+                      </select>
+                    </div>
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-slate-600 mb-1">説明 (任意)</label>
+                    <label className="block text-xs font-bold text-slate-600 mb-1">説明 (背景や目的)</label>
                     <textarea
                       value={policyForm.description}
                       onChange={e => setPolicyForm({ ...policyForm, description: e.target.value })}
-                      placeholder="政策の目的や背景など"
-                      className="w-full text-sm p-2.5 rounded border border-slate-300 focus:outline-none focus:ring-2 focus:ring-sage-500/50 min-h-[60px]"
+                      placeholder="この政策が必要な理由や、達成したい目標を記載してください..."
+                      className="w-full text-sm p-3 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-sage-500/50 transition-all min-h-[100px]"
                     />
                   </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-slate-600 mb-2 border-b pb-1">To-Do リスト</label>
-                    <div className="space-y-3">
-                      {policyForm.todos.map((todo, idx) => (
-                        <div key={idx} className="flex gap-2 items-start bg-white p-2 rounded border border-slate-200 relative group">
-                          <button
-                            onClick={() => handleRemoveTodo(idx)}
-                            className="absolute -top-2 -right-2 bg-red-100 text-red-500 rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity z-10"
-                            title="削除"
-                          >
-                            <X className="w-3.5 h-3.5" />
-                          </button>
-                          <div className="flex-1 flex flex-col gap-2">
-                            <input
-                              type="text"
-                              value={todo.task}
-                              onChange={e => handleTodoChange(idx, 'task', e.target.value)}
-                              placeholder="タスク内容"
-                              className="w-full text-xs p-2 rounded border border-slate-200 focus:border-sage-400 focus:ring-1 focus:ring-sage-400 outline-none"
-                            />
-                            <div className="flex gap-2">
+                  <label className="block text-xs font-bold text-slate-600 mb-2 border-b pb-1">To-Do リスト</label>
+                  <div className="space-y-3">
+                    {policyForm.todos.map((todo, idx) => (
+                      <div key={idx} className="flex gap-2 items-start bg-white p-2 rounded border border-slate-200 relative group">
+                        <button
+                          onClick={() => handleRemoveTodo(idx)}
+                          className="absolute -top-2 -right-2 bg-red-100 text-red-500 rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                          title="削除"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                        <div className="flex-1 flex flex-col gap-2">
+                          <input
+                            type="text"
+                            value={todo.task}
+                            onChange={e => handleTodoChange(idx, 'task', e.target.value)}
+                            placeholder="タスク内容"
+                            className="w-full text-xs p-2 rounded border border-slate-200 focus:border-sage-400 focus:ring-1 focus:ring-sage-400 outline-none"
+                          />
+                          <div className="flex gap-2">
+                            <div className="flex-1 relative">
+                              <UserIcon className="w-3.5 h-3.5 absolute left-2 top-2 text-slate-400" />
+                              <select
+                                value={todo.assignee}
+                                onChange={e => handleTodoChange(idx, 'assignee', e.target.value)}
+                                className="w-full text-xs pl-7 p-2 rounded border border-slate-200 focus:border-sage-400 outline-none appearance-none bg-white text-slate-600"
+                              >
+                                <option value="">担当者を選択</option>
+                                <option value="担当者未定">担当者未定</option>
+                                {orgMembers.map((m, mIdx) => (
+                                  <option key={mIdx} value={m.username}>{m.username}</option>
+                                ))}
+                              </select>
+                            </div>
+                            <div className="flex-1 flex gap-1 items-center">
                               <div className="flex-1 relative">
-                                <UserIcon className="w-3.5 h-3.5 absolute left-2 top-2 text-slate-400" />
-                                <select
-                                  value={todo.assignee}
-                                  onChange={e => handleTodoChange(idx, 'assignee', e.target.value)}
-                                  className="w-full text-xs pl-7 p-2 rounded border border-slate-200 focus:border-sage-400 outline-none appearance-none bg-white text-slate-600"
-                                >
-                                  <option value="">担当者を選択</option>
-                                  <option value="担当者未定">担当者未定</option>
-                                  {orgMembers.map((m, mIdx) => (
-                                    <option key={mIdx} value={m.username}>{m.username}</option>
-                                  ))}
-                                </select>
+                                <input
+                                  type="date"
+                                  value={todo.start_date}
+                                  onChange={e => handleTodoChange(idx, 'start_date', e.target.value)}
+                                  className="w-full text-[10px] p-2 rounded border border-slate-200 focus:border-sage-400 outline-none"
+                                  title="開始日"
+                                />
                               </div>
-                              <div className="flex-1 flex gap-1 items-center">
-                                <div className="flex-1 relative">
-                                  <input
-                                    type="date"
-                                    value={todo.start_date}
-                                    onChange={e => handleTodoChange(idx, 'start_date', e.target.value)}
-                                    className="w-full text-[10px] p-2 rounded border border-slate-200 focus:border-sage-400 outline-none"
-                                    title="開始日"
-                                  />
-                                </div>
-                                <span className="text-slate-400 text-xs">〜</span>
-                                <div className="flex-1 relative">
-                                  <input
-                                    type="date"
-                                    value={todo.deadline}
-                                    onChange={e => handleTodoChange(idx, 'deadline', e.target.value)}
-                                    className="w-full text-[10px] p-2 rounded border border-slate-200 focus:border-sage-400 outline-none"
-                                    title="期限"
-                                  />
-                                </div>
+                              <span className="text-slate-400 text-xs">〜</span>
+                              <div className="flex-1 relative">
+                                <input
+                                  type="date"
+                                  value={todo.deadline}
+                                  onChange={e => handleTodoChange(idx, 'deadline', e.target.value)}
+                                  className="w-full text-[10px] p-2 rounded border border-slate-200 focus:border-sage-400 outline-none"
+                                  title="期限"
+                                />
                               </div>
                             </div>
                           </div>
                         </div>
-                      ))}
-                    </div>
-                    <button
-                      onClick={handleAddTodo}
-                      className="mt-2 text-xs flex items-center gap-1 text-sage-600 hover:text-sage-800 font-bold hover:bg-sage-100 p-1.5 rounded transition-colors"
-                    >
-                      <span>+</span> To-Doを追加
-                    </button>
+                      </div>
+                    ))}
                   </div>
+                  <button
+                    onClick={handleAddTodo}
+                    className="mt-2 text-xs flex items-center gap-1 text-sage-600 hover:text-sage-800 font-bold hover:bg-sage-100 p-1.5 rounded transition-colors"
+                  >
+                    <span>+</span> To-Doを追加
+                  </button>
+                </div>
 
-                  <div className="flex justify-end gap-2 pt-4 border-t border-sage-200/50">
-                    <button
-                      onClick={() => {
-                        setIsCreatingPolicy(false);
-                        setPolicyForm({ title: '', description: '', todos: [{ task: '', assignee: '', start_date: '', deadline: '', completed: false }] });
-                      }}
-                      className="text-sm px-4 py-2 text-slate-600 hover:bg-slate-200 rounded-lg transition-colors font-medium border border-transparent hover:border-slate-300"
-                    >
-                      キャンセル
-                    </button>
-                    <button
-                      onClick={handleCreatePolicy}
-                      disabled={isUpdating || !policyForm.title.trim()}
-                      className="text-sm bg-sage-600 hover:bg-sage-700 text-white px-5 py-2 rounded-lg transition-colors font-bold shadow-sm disabled:bg-sage-300 flex items-center gap-2"
-                    >
-                      {isUpdating ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span> : null}
-                      政策を立案
-                    </button>
-                  </div>
+                <div className="flex justify-end gap-2 pt-4 border-t border-sage-200/50">
+                  <button
+                    onClick={() => {
+                      setIsCreatingPolicy(false);
+                      setPolicyForm({ title: '', description: '', priority: 'medium', todos: [{ task: '', assignee: '', start_date: '', deadline: '', completed: false }] });
+                    }}
+                    className="text-sm px-4 py-2 text-slate-600 hover:bg-slate-200 rounded-lg transition-colors font-medium border border-transparent hover:border-slate-300"
+                  >
+                    キャンセル
+                  </button>
+                  <button
+                    onClick={handleCreatePolicy}
+                    disabled={isUpdating || !policyForm.title.trim()}
+                    className="text-sm bg-sage-600 hover:bg-sage-700 text-white px-5 py-2 rounded-lg transition-colors font-bold shadow-sm disabled:bg-sage-300 flex items-center gap-2"
+                  >
+                    {isUpdating ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span> : null}
+                    政策を立案
+                  </button>
                 </div>
               </div>
             )}
@@ -1092,9 +1127,8 @@ function SessionDetailContent() {
               <div className="space-y-4 mb-4">
                 {sessionPolicies.map(policy => {
                   const isExpanded = expandedPolicyIds.includes(policy.id);
-                  const validTodosForGantt = (policy.todos && Array.isArray(policy.todos))
-                    ? policy.todos.filter((t: any) => t.start_date && t.deadline)
-                    : [];
+                  const parsedTodos = parseTodos(policy.todos);
+                  const validTodosForGantt = parsedTodos.filter((t: any) => t.start_date && t.deadline);
 
                   let minDate = 0, maxDate = 0, totalDays = 1;
                   if (validTodosForGantt.length > 0) {
@@ -1116,6 +1150,14 @@ function SessionDetailContent() {
                           </span>
                           <Target className="w-4 h-4 text-sage-500" />
                           {policy.title}
+                          <span className={`ml-2 px-2 py-0.5 rounded text-[10px] font-bold border text-center min-w-[28px] inline-block ${policy.priority === 'high'
+                            ? 'bg-red-100/80 text-red-700 border-red-300'
+                            : policy.priority === 'low'
+                              ? 'bg-blue-100/80 text-blue-700 border-blue-300'
+                              : 'bg-yellow-100/80 text-yellow-700 border-yellow-300'
+                            }`}>
+                            {policy.priority === 'high' ? '高' : policy.priority === 'low' ? '低' : '中'}
+                          </span>
                         </h5>
                         {/* Buttons moved to body */}
                       </div>
@@ -1155,9 +1197,9 @@ function SessionDetailContent() {
                                 <ListTodo className="w-3.5 h-3.5" /> To-Doリスト
                               </strong>
                             </div>
-                            {policy.todos && Array.isArray(policy.todos) && policy.todos.length > 0 ? (
+                            {parsedTodos.length > 0 ? (
                               <div className="space-y-2">
-                                {policy.todos.map((todo: any, idx: number) => (
+                                {parsedTodos.map((todo: any, idx: number) => (
                                   <div key={idx} className={`flex items-start gap-3 p-3 rounded-md border text-xs transition-colors ${todo.completed ? 'bg-slate-50 border-slate-100 opacity-60' : 'bg-white border-slate-200 shadow-sm'}`}>
                                     <button
                                       onClick={() => handleToggleTodo(policy, idx)}
@@ -1290,9 +1332,28 @@ function SessionDetailContent() {
                           </div>
 
                           <div className="space-y-4">
-                            <div>
-                              <label className="block text-[11px] font-bold text-slate-600 mb-1">政策名称</label>
-                              <input type="text" value={editPolicyForm.title} onChange={e => setEditPolicyForm({ ...editPolicyForm, title: e.target.value })} className="w-full text-sm p-2 rounded border border-slate-300 focus:outline-none focus:ring-2 focus:ring-sage-500/50" />
+                            <div className="flex gap-4">
+                              <div className="flex-1">
+                                <label className="block text-[11px] font-bold text-slate-600 mb-1">政策名称</label>
+                                <input type="text" value={editPolicyForm.title} onChange={e => setEditPolicyForm({ ...editPolicyForm, title: e.target.value })} className="w-full text-sm p-2 rounded border border-slate-300 focus:outline-none focus:ring-2 focus:ring-sage-500/50" />
+                              </div>
+                              <div className="w-24">
+                                <label className="block text-[11px] font-bold text-slate-600 mb-1">優先順位</label>
+                                <select
+                                  value={editPolicyForm.priority}
+                                  onChange={e => setEditPolicyForm({ ...editPolicyForm, priority: e.target.value })}
+                                  className={`w-full text-sm p-2 rounded border focus:outline-none focus:ring-2 focus:ring-sage-500/50 appearance-none font-bold text-center ${editPolicyForm.priority === 'high'
+                                    ? 'bg-red-100/80 border-red-300 text-red-700'
+                                    : editPolicyForm.priority === 'low'
+                                      ? 'bg-blue-100/80 border-blue-300 text-blue-700'
+                                      : 'bg-yellow-100/80 border-yellow-300 text-yellow-700'
+                                    }`}
+                                >
+                                  <option value="high">高</option>
+                                  <option value="medium">中</option>
+                                  <option value="low">低</option>
+                                </select>
+                              </div>
                             </div>
                             <div>
                               <label className="block text-[11px] font-bold text-slate-600 mb-1">説明</label>
@@ -1420,72 +1481,74 @@ function SessionDetailContent() {
                   )}
                 </div>
 
-                {currentAnalysis ? (
-                  <div className="space-y-4">
-                    {/* Next Actions (Directly displayed) */}
-                    {currentAnalysis.next_steps?.length > 0 && (
-                      <div className="bg-white rounded-lg border border-amber-100 shadow-sm overflow-hidden">
-                        <div className="divide-y divide-amber-50/50">
-                          {Array.isArray(currentAnalysis.next_steps) ? (
-                            currentAnalysis.next_steps.map((step: any, i: number) => {
-                              const isObject = typeof step === 'object' && step !== null && 'title' in step;
-                              const title = isObject ? step.title : step;
-                              const detail = isObject ? step.detail : null;
+                {
+                  currentAnalysis ? (
+                    <div className="space-y-4">
+                      {/* Next Actions (Directly displayed) */}
+                      {currentAnalysis.next_steps?.length > 0 && (
+                        <div className="bg-white rounded-lg border border-amber-100 shadow-sm overflow-hidden">
+                          <div className="divide-y divide-amber-50/50">
+                            {Array.isArray(currentAnalysis.next_steps) ? (
+                              currentAnalysis.next_steps.map((step: any, i: number) => {
+                                const isObject = typeof step === 'object' && step !== null && 'title' in step;
+                                const title = isObject ? step.title : step;
+                                const detail = isObject ? step.detail : null;
 
-                              return (
-                                <details key={i} className="group open:bg-amber-50/30 transition-colors">
-                                  <summary className="px-4 py-3 cursor-pointer flex items-start gap-2 list-none outline-none">
-                                    <CheckCircle className="w-4 h-4 text-sage-500 shrink-0 mt-0.5" />
-                                    <span className="text-xs text-slate-700 font-bold leading-relaxed flex-1">{title}</span>
+                                return (
+                                  <details key={i} className="group open:bg-amber-50/30 transition-colors">
+                                    <summary className="px-4 py-3 cursor-pointer flex items-start gap-2 list-none outline-none">
+                                      <CheckCircle className="w-4 h-4 text-sage-500 shrink-0 mt-0.5" />
+                                      <span className="text-xs text-slate-700 font-bold leading-relaxed flex-1">{title}</span>
+                                      {detail && (
+                                        <ChevronDown className="w-4 h-4 text-amber-400 group-open:rotate-180 transition-transform shrink-0" />
+                                      )}
+                                    </summary>
                                     {detail && (
-                                      <ChevronDown className="w-4 h-4 text-amber-400 group-open:rotate-180 transition-transform shrink-0" />
+                                      <div className="px-4 pb-3 pl-10 text-xs text-slate-600 leading-relaxed">
+                                        {detail}
+                                      </div>
                                     )}
-                                  </summary>
-                                  {detail && (
-                                    <div className="px-4 pb-3 pl-10 text-xs text-slate-600 leading-relaxed">
-                                      {detail}
-                                    </div>
-                                  )}
-                                </details>
-                              );
-                            })
-                          ) : (
-                            // Fallback for legacy string next_steps
-                            <p className="p-4 text-xs text-slate-700 leading-relaxed whitespace-pre-wrap">{currentAnalysis.next_steps}</p>
-                          )}
+                                  </details>
+                                );
+                              })
+                            ) : (
+                              // Fallback for legacy string next_steps
+                              <p className="p-4 text-xs text-slate-700 leading-relaxed whitespace-pre-wrap">{currentAnalysis.next_steps}</p>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <div className="text-center py-3 bg-white/50 rounded-lg border border-dashed border-amber-200">
-                    <p className="text-xs text-slate-400 mb-2">まだ分析結果がありません</p>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="text-center py-3 bg-white/50 rounded-lg border border-dashed border-amber-200">
+                      <p className="text-xs text-slate-400 mb-2">まだ分析結果がありません</p>
 
-                    {/* Admin View */}
-                    {(user?.role === 'system_admin' || user?.org_role === 'admin') ? (
-                      <>
-                        {activeThreadRootId ? (
-                          <button
-                            onClick={() => handleAnalyzeThread(activeThreadRootId!)}
-                            disabled={isAnalyzing}
-                            className="text-[10px] text-amber-600 hover:text-amber-800 underline disabled:opacity-50"
-                          >
-                            分析を実行する
-                          </button>
-                        ) : (
-                          <p className="text-[10px] text-slate-400">スレッドが作成されると分析を実行できます</p>
-                        )}
-                      </>
-                    ) : (
-                      /* Member View */
-                      <p className="text-[10px] text-slate-400">
-                        {!activeThreadRootId
-                          ? "スレッドが作成され、分析が実行されるとここに表示されます"
-                          : "分析がされるまでお待ちください"}
-                      </p>
-                    )}
-                  </div>
-                )}
+                      {/* Admin View */}
+                      {(user?.role === 'system_admin' || user?.org_role === 'admin') ? (
+                        <>
+                          {activeThreadRootId ? (
+                            <button
+                              onClick={() => handleAnalyzeThread(activeThreadRootId!)}
+                              disabled={isAnalyzing}
+                              className="text-[10px] text-amber-600 hover:text-amber-800 underline disabled:opacity-50"
+                            >
+                              分析を実行する
+                            </button>
+                          ) : (
+                            <p className="text-[10px] text-slate-400">スレッドが作成されると分析を実行できます</p>
+                          )}
+                        </>
+                      ) : (
+                        /* Member View */
+                        <p className="text-[10px] text-slate-400">
+                          {!activeThreadRootId
+                            ? "スレッドが作成され、分析が実行されるとここに表示されます"
+                            : "分析がされるまでお待ちください"}
+                        </p>
+                      )}
+                    </div>
+                  )
+                }
               </div>
 
               {/* Chat Thread */}
@@ -1539,9 +1602,8 @@ function SessionDetailContent() {
 
           </div>
         </div>
-
       </div>
-    </div >
+    </div>
   );
 }
 

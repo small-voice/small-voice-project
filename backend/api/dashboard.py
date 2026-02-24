@@ -90,6 +90,7 @@ class PolicyItem(BaseModel):
     issue_id: Optional[str]
     title: str
     description: str
+    priority: str
     todos: Any
     created_at: datetime
 
@@ -205,6 +206,7 @@ def get_session_detail(
                 issue_id=p.issue_id,
                 title=p.title,
                 description=p.description,
+                priority=p.priority or "medium",
                 todos=p.todos,
                 created_at=p.created_at
             ) for p in session.policies
@@ -311,6 +313,7 @@ class PolicyRequest(BaseModel):
     issue_id: Optional[str] = None
     title: str
     description: str
+    priority: str = "medium"
     todos: Any
 
 @router.post("/sessions/{session_id}/policies", response_model=PolicyItem)
@@ -335,6 +338,7 @@ def create_policy(
         issue_id=payload.issue_id,
         title=payload.title,
         description=payload.description,
+        priority=payload.priority,
         todos=payload.todos
     )
     db.add(new_policy)
@@ -346,6 +350,7 @@ def create_policy(
         issue_id=new_policy.issue_id,
         title=new_policy.title,
         description=new_policy.description,
+        priority=new_policy.priority,
         todos=new_policy.todos,
         created_at=new_policy.created_at
     )
@@ -374,6 +379,7 @@ def update_policy(
     policy.issue_id = payload.issue_id
     policy.title = payload.title
     policy.description = payload.description
+    policy.priority = payload.priority
     policy.todos = payload.todos
     
     db.commit()
@@ -384,6 +390,7 @@ def update_policy(
         issue_id=policy.issue_id,
         title=policy.title,
         description=policy.description,
+        priority=policy.priority,
         todos=policy.todos,
         created_at=policy.created_at
     )

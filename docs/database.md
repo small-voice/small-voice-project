@@ -148,6 +148,7 @@ AI分析の実行単位（セッション）を管理します。
 | `issue_id` | String | 紐づく課題のIDまたはタイトル（任意）。 |
 | `title` | String | 政策名。 |
 | `description` | Text | 政策の説明。 |
+| `priority` | String | 優先順位。`'high'`（高）/ `'medium'`（中）/ `'low'`（低）のいずれか。デフォルト: `'medium'`。 |
 | `todos` | JSON | 実現までのToDoリスト。`[{"task": "...", "assignee": "...", "start_date": "...", "deadline": "...", "completed": false}]` |
 | `created_at` | DateTime | 作成日時。 |
 | `updated_at` | DateTime | 最終更新日時。 |
