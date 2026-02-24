@@ -211,7 +211,7 @@ export default function LandingPage() {
                             <CheckCircle2 className="w-5 h-5 text-sage-500 mt-0.5 shrink-0" />
                             <span>
                               <span className="font-bold text-sage-800 block mb-1">政策リスト</span>
-                              対話から生まれたアイデアを、具体的な政策として立案し、管理、実行。
+                              対話から生まれたアイデアを、具体的な政策として立案し、管理、実行に移します。
                             </span>
                           </li>
                         </ul>
