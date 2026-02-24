@@ -170,46 +170,6 @@ export default function LandingPage() {
                 <div className="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
                   <div className="flex items-start gap-0 sm:gap-4">
                     <div className="hidden sm:block bg-sage-100 p-3 rounded-xl text-sage-600 shrink-0">
-                      <Database className="w-8 h-8" />
-                    </div>
-                    <div>
-                      <h4 className="text-xl font-bold text-sage-900 mb-3">多様なデータ収集方法</h4>
-                      <div className="space-y-3">
-                        <p className="text-slate-600 leading-relaxed">
-                          管理者によるフォーム作成・管理に加えて、さまざまな方法でデータ収集が可能です。
-                        </p>
-                        <ul className="space-y-4 mt-4">
-                          <li className="flex items-start gap-3 text-sm text-slate-600">
-                            <CheckCircle2 className="w-5 h-5 text-sage-500 mt-0.5 shrink-0" />
-                            <span>
-                              <span className="font-bold text-sage-800 block mb-1">雑談掲示板からのフォーム作成</span>
-                              メンバーが日常的に投稿した声をAI分析し、フォーム作成のベースとなるテーマを自動抽出。分析結果から直接フォームを作成できます。
-                            </span>
-                          </li>
-                          <li className="flex items-start gap-3 text-sm text-slate-600">
-                            <CheckCircle2 className="w-5 h-5 text-sage-500 mt-0.5 shrink-0" />
-                            <span>
-                              <span className="font-bold text-sage-800 block mb-1">メンバーからのフォーム申請</span>
-                              メンバーが自発的に問いたい内容をフォームにし、管理者へ承認申請できるボトムアップ設計。
-                            </span>
-                          </li>
-                          <li className="flex items-start gap-3 text-sm text-slate-600">
-                            <CheckCircle2 className="w-5 h-5 text-sage-500 mt-0.5 shrink-0" />
-                            <span>
-                              <span className="font-bold text-sage-800 block mb-1">外部フォームのインポート</span>
-                              Googleフォームなどの外部アンケートの結果を、CSVインポートで一括取り込みすることも可能です。
-                            </span>
-                          </li>
-                        </ul>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Feature 2 */}
-                <div className="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
-                  <div className="flex items-start gap-0 sm:gap-4">
-                    <div className="hidden sm:block bg-sage-100 p-3 rounded-xl text-sage-600 shrink-0">
                       <Brain className="w-8 h-8" />
                     </div>
                     <div>
@@ -245,6 +205,53 @@ export default function LandingPage() {
                             <span>
                               <span className="font-bold text-sage-800 block mb-1">AIファシリテーター</span>
                               各チャットの対話をAIが中立的なファシリテーターとして分析し、合意形成をサポートします。
+                            </span>
+                          </li>
+                          <li className="flex items-start gap-3 text-sm text-slate-600">
+                            <CheckCircle2 className="w-5 h-5 text-sage-500 mt-0.5 shrink-0" />
+                            <span>
+                              <span className="font-bold text-sage-800 block mb-1">政策リスト</span>
+                              課題解決のアイデアを元に、具体的なToDoとスケジュール（ガントチャート）付きの「政策」として立案・管理し、実行に移します。
+                            </span>
+                          </li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Feature 2 */}
+                <div className="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+                  <div className="flex items-start gap-0 sm:gap-4">
+                    <div className="hidden sm:block bg-sage-100 p-3 rounded-xl text-sage-600 shrink-0">
+                      <Database className="w-8 h-8" />
+                    </div>
+                    <div>
+                      <h4 className="text-xl font-bold text-sage-900 mb-3">多様なデータ収集方法</h4>
+                      <div className="space-y-3">
+                        <p className="text-slate-600 leading-relaxed">
+                          管理者によるフォーム作成・管理に加えて、さまざまな方法でデータ収集が可能です。
+                        </p>
+                        <ul className="space-y-4 mt-4">
+                          <li className="flex items-start gap-3 text-sm text-slate-600">
+                            <CheckCircle2 className="w-5 h-5 text-sage-500 mt-0.5 shrink-0" />
+                            <span>
+                              <span className="font-bold text-sage-800 block mb-1">雑談掲示板からのフォーム作成</span>
+                              メンバーが日常的に投稿した声をAI分析し、フォーム作成のベースとなるテーマを自動抽出。分析結果から直接フォームを作成できます。
+                            </span>
+                          </li>
+                          <li className="flex items-start gap-3 text-sm text-slate-600">
+                            <CheckCircle2 className="w-5 h-5 text-sage-500 mt-0.5 shrink-0" />
+                            <span>
+                              <span className="font-bold text-sage-800 block mb-1">メンバーからのフォーム申請</span>
+                              メンバーが自発的に問いたい内容をフォームにし、管理者へ承認申請できるボトムアップ設計。
+                            </span>
+                          </li>
+                          <li className="flex items-start gap-3 text-sm text-slate-600">
+                            <CheckCircle2 className="w-5 h-5 text-sage-500 mt-0.5 shrink-0" />
+                            <span>
+                              <span className="font-bold text-sage-800 block mb-1">外部フォームのインポート</span>
+                              Googleフォームなどの外部アンケートの結果を、CSVインポートで一括取り込みすることも可能です。
                             </span>
                           </li>
                         </ul>
