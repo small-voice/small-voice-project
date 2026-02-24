@@ -1,6 +1,7 @@
 import uuid
 from sqlalchemy import create_engine, Column, Integer, String, Float, ForeignKey, Text, DateTime, Boolean, text
-from sqlalchemy.orm import declarative_base, sessionmaker, relationship
+from sqlalchemy.orm import declarative_base, relationship, Session, sessionmaker
+from sqlalchemy.dialects.postgresql import JSON
 from datetime import datetime, timedelta, timezone
 JST = timezone(timedelta(hours=9))
 def now_jst():
@@ -182,6 +183,7 @@ class AnalysisSession(Base):
     results = relationship("AnalysisResult", back_populates="session", cascade="all, delete-orphan")
     report = relationship("IssueDefinition", back_populates="session", uselist=False, cascade="all, delete-orphan")
     comments = relationship("Comment", back_populates="session", cascade="all, delete-orphan")
+    policies = relationship("Policy", back_populates="session", cascade="all, delete-orphan")
     organization = relationship("Organization", back_populates="analysis_sessions")
 
 class AnalysisResult(Base):
@@ -204,6 +206,20 @@ class IssueDefinition(Base):
     session_id = Column(Integer, ForeignKey("analysis_sessions.id"))
     content = Column(Text)
     session = relationship("AnalysisSession", back_populates="report")
+
+class Policy(Base):
+    """政策リスト"""
+    __tablename__ = "policies"
+    id = Column(Integer, primary_key=True, index=True)
+    session_id = Column(Integer, ForeignKey("analysis_sessions.id"))
+    issue_id = Column(String, nullable=True) # 紐づく課題のIDまたはタイトル
+    title = Column(String) # 政策名
+    description = Column(Text) # 説明
+    todos = Column(JSON) # 実現までのtodo: [{"task": "...", "assignee": "...", "deadline": "...", "completed": false}]
+    created_at = Column(DateTime, default=now_jst)
+    updated_at = Column(DateTime, default=now_jst, onupdate=now_jst)
+    
+    session = relationship("AnalysisSession", back_populates="policies")
 
 class Comment(Base):
     __tablename__ = "comments"

@@ -10,7 +10,7 @@ import remarkBreaks from 'remark-breaks';
 // import Tabs from '@/components/ui/Tabs';
 import CommentTree from '@/components/dashboard/CommentTree';
 import { SessionDetail } from '@/types/dashboard';
-import { Map as MapIcon, FileText, MessageCircle, ArrowLeft, Sparkles, Users, ChevronDown, User as UserIcon, CheckCircle, ListTodo, Lightbulb, MoreHorizontal, FileEdit, Archive, Trash2 } from 'lucide-react';
+import { Map as MapIcon, FileText, MessageCircle, ArrowLeft, Sparkles, Users, ChevronDown, User as UserIcon, CheckCircle, ListTodo, Lightbulb, MoreHorizontal, FileEdit, Archive, Trash2, Calendar, Target, ChevronLeft, ChevronRight, Save, X } from 'lucide-react';
 import Link from 'next/link';
 import RichTextEditor from '@/components/ui/RichTextEditor';
 import { useSidebar } from '@/components/SidebarContext';
@@ -24,6 +24,7 @@ interface User {
   id: number;
   role: string;
   org_role?: string;
+  current_org_id?: number;
 }
 
 const COLOR_PALETTE = [
@@ -240,6 +241,144 @@ function SessionDetailContent() {
   const [postContent, setPostContent] = useState('');
   const [isAnonymous, setIsAnonymous] = useState(false);
 
+  // Organization Members for Assignee Dropdown
+  const [orgMembers, setOrgMembers] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (user?.current_org_id) {
+      axios.get(`/api/organizations/${user.current_org_id}/members`, { withCredentials: true })
+        .then(res => setOrgMembers(res.data))
+        .catch(err => console.error(err));
+    }
+  }, [user]);
+
+  // Policy State
+  const [isCreatingPolicy, setIsCreatingPolicy] = useState(false);
+  const [expandedPolicyIds, setExpandedPolicyIds] = useState<number[]>([]);
+
+  const togglePolicy = (id: number) => {
+    setExpandedPolicyIds(prev => prev.includes(id) ? prev.filter(p => p !== id) : [...prev, id]);
+  };
+
+  const [policyForm, setPolicyForm] = useState({
+    title: '',
+    description: '',
+    todos: [{ task: '', assignee: '', start_date: '', deadline: '', completed: false }]
+  });
+
+  // Edit Policy State
+  const [editPolicyId, setEditPolicyId] = useState<number | null>(null);
+  const [editPolicyForm, setEditPolicyForm] = useState<any>(null);
+
+  // Gantt Chart State
+  const [ganttMonths, setGanttMonths] = useState<Record<number, Date>>({});
+
+  const handleEditPolicyClick = (policy: any, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setEditPolicyId(policy.id);
+    setEditPolicyForm({
+      title: policy.title,
+      description: policy.description || '',
+      todos: policy.todos || []
+    });
+    if (!expandedPolicyIds.includes(policy.id)) {
+      setExpandedPolicyIds(prev => [...prev, policy.id]);
+    }
+  };
+
+  const handleCancelEditPolicy = () => {
+    setEditPolicyId(null);
+    setEditPolicyForm(null);
+  };
+
+  const handleSaveEditPolicy = async () => {
+    if (!editPolicyForm?.title?.trim()) return;
+    setIsUpdating(true);
+    try {
+      await axios.put(`/api/dashboard/policies/${editPolicyId}`, {
+        issue_id: null,
+        title: editPolicyForm.title,
+        description: editPolicyForm.description,
+        todos: editPolicyForm.todos
+      }, { withCredentials: true });
+
+      setEditPolicyId(null);
+      setEditPolicyForm(null);
+
+      const res = await axios.get(`/api/dashboard/sessions/${id}`, { withCredentials: true });
+      setData(res.data);
+    } catch (e) {
+      alert("更新に失敗しました");
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const handleEditAddTodo = () => {
+    if (!editPolicyForm) return;
+    setEditPolicyForm({ ...editPolicyForm, todos: [...editPolicyForm.todos, { task: '', assignee: '', start_date: '', deadline: '', completed: false }] });
+  };
+
+  const handleEditTodoChange = (index: number, field: string, value: any) => {
+    if (!editPolicyForm) return;
+    const newTodos = [...editPolicyForm.todos];
+    newTodos[index] = { ...newTodos[index], [field]: value };
+    setEditPolicyForm({ ...editPolicyForm, todos: newTodos });
+  };
+
+  const handleEditRemoveTodo = (index: number) => {
+    if (!editPolicyForm) return;
+    const newTodos = editPolicyForm.todos.filter((_: any, i: number) => i !== index);
+    setEditPolicyForm({ ...editPolicyForm, todos: newTodos });
+  };
+
+  const handleEditToggleTodo = (index: number) => {
+    if (!editPolicyForm) return;
+    const newTodos = [...editPolicyForm.todos];
+    newTodos[index] = { ...newTodos[index], completed: !newTodos[index].completed };
+    setEditPolicyForm({ ...editPolicyForm, todos: newTodos });
+  };
+
+  const handleAddTodo = () => {
+    setPolicyForm(prev => ({
+      ...prev,
+      todos: [...prev.todos, { task: '', assignee: '', start_date: '', deadline: '', completed: false }]
+    }));
+  };
+
+  const handleTodoChange = (index: number, field: string, value: any) => {
+    const newTodos = [...policyForm.todos];
+    newTodos[index] = { ...newTodos[index], [field]: value };
+    setPolicyForm({ ...policyForm, todos: newTodos });
+  };
+
+  const handleRemoveTodo = (index: number) => {
+    const newTodos = policyForm.todos.filter((_, i) => i !== index);
+    setPolicyForm({ ...policyForm, todos: newTodos });
+  };
+
+  const handleToggleTodo = async (policy: any, todoIndex: number) => {
+    const newTodos = [...policy.todos];
+    newTodos[todoIndex].completed = !newTodos[todoIndex].completed;
+
+    setIsUpdating(true);
+    try {
+      await axios.put(`/api/dashboard/policies/${policy.id}`, {
+        issue_id: policy.issue_id,
+        title: policy.title,
+        description: policy.description,
+        todos: newTodos
+      }, { withCredentials: true });
+
+      const res = await axios.get(`/api/dashboard/sessions/${id}`, { withCredentials: true });
+      setData(res.data);
+    } catch (e) {
+      alert("Todoの更新に失敗しました");
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
   const handleCreatePost = async () => {
     if (!postContent.trim() || !data || !activeIssue) return;
 
@@ -290,6 +429,43 @@ function SessionDetailContent() {
       router.push('/dashboard');
     } catch (error) {
       alert("削除に失敗しました");
+      setIsUpdating(false);
+    }
+  };
+
+  const handleCreatePolicy = async () => {
+    if (!policyForm.title.trim() || !data) return;
+    setIsUpdating(true);
+    try {
+      await axios.post(`/api/dashboard/sessions/${id}/policies`, {
+        issue_id: null,
+        title: policyForm.title,
+        description: policyForm.description,
+        todos: policyForm.todos,
+      }, { withCredentials: true });
+
+      setPolicyForm({ title: '', description: '', todos: [{ task: '', assignee: '', start_date: '', deadline: '', completed: false }] });
+      setIsCreatingPolicy(false);
+
+      const res = await axios.get(`/api/dashboard/sessions/${id}`, { withCredentials: true });
+      setData(res.data);
+    } catch (e) {
+      alert("政策の作成に失敗しました");
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const handleDeletePolicy = async (policyId: number) => {
+    if (!confirm("この政策を削除してよろしいですか？")) return;
+    setIsUpdating(true);
+    try {
+      await axios.delete(`/api/dashboard/policies/${policyId}`, { withCredentials: true });
+      const res = await axios.get(`/api/dashboard/sessions/${id}`, { withCredentials: true });
+      setData(res.data);
+    } catch (e) {
+      alert("政策の削除に失敗しました");
+    } finally {
       setIsUpdating(false);
     }
   };
@@ -449,6 +625,8 @@ function SessionDetailContent() {
 
   // Check Permissions
   const isAdmin = user?.role === 'admin' || user?.role === 'system_admin' || user?.org_role === 'admin';
+
+  const sessionPolicies = data.policies || [];
 
   return (
     <div className="h-full flex flex-col bg-slate-50">
@@ -773,6 +951,524 @@ function SessionDetailContent() {
               })()}
             </div>
             <div className="h-10"></div>
+          </section>
+
+          {/* 3. Policy Area */}
+          <section className="glass-card p-4 md:p-6 mb-8">
+            <div className="flex items-center justify-between mb-4 border-b border-gray-100 pb-2">
+              <h3 className="text-sm font-bold text-sage-dark pl-2 border-l-4 border-sage-primary flex items-center gap-2">
+                <ListTodo className="h-4 w-4" /> 3. 政策リスト
+              </h3>
+              {!isCreatingPolicy && (
+                <button
+                  onClick={() => setIsCreatingPolicy(true)}
+                  className="text-[10px] bg-white border border-sage-200 hover:bg-sage-50 text-sage-700 px-3 py-1.5 flex items-center gap-1 rounded font-bold shadow-sm transition-all"
+                >
+                  + 新規立案
+                </button>
+              )}
+            </div>
+
+            {/* Policy Create Form */}
+            {isCreatingPolicy && (
+              <div className="bg-slate-50 border border-sage-200 rounded-lg p-4 md:p-6 shadow-sm animate-in fade-in slide-in-from-top-2 relative z-20 mb-6">
+                <h4 className="text-sm font-bold text-sage-800 mb-4 border-b border-sage-200/50 pb-2">新しい政策を立案する</h4>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-600 mb-1">政策名称 <span className="text-red-500">*</span></label>
+                    <input
+                      type="text"
+                      value={policyForm.title}
+                      onChange={e => setPolicyForm({ ...policyForm, title: e.target.value })}
+                      placeholder="例: 会議のガイドライン制定"
+                      className="w-full text-sm p-2.5 rounded border border-slate-300 focus:outline-none focus:ring-2 focus:ring-sage-500/50"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-600 mb-1">説明 (任意)</label>
+                    <textarea
+                      value={policyForm.description}
+                      onChange={e => setPolicyForm({ ...policyForm, description: e.target.value })}
+                      placeholder="政策の目的や背景など"
+                      className="w-full text-sm p-2.5 rounded border border-slate-300 focus:outline-none focus:ring-2 focus:ring-sage-500/50 min-h-[60px]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-600 mb-2 border-b pb-1">To-Do リスト</label>
+                    <div className="space-y-3">
+                      {policyForm.todos.map((todo, idx) => (
+                        <div key={idx} className="flex gap-2 items-start bg-white p-2 rounded border border-slate-200 relative group">
+                          <button
+                            onClick={() => handleRemoveTodo(idx)}
+                            className="absolute -top-2 -right-2 bg-red-100 text-red-500 rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                            title="削除"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                          <div className="flex-1 flex flex-col gap-2">
+                            <input
+                              type="text"
+                              value={todo.task}
+                              onChange={e => handleTodoChange(idx, 'task', e.target.value)}
+                              placeholder="タスク内容"
+                              className="w-full text-xs p-2 rounded border border-slate-200 focus:border-sage-400 focus:ring-1 focus:ring-sage-400 outline-none"
+                            />
+                            <div className="flex gap-2">
+                              <div className="flex-1 relative">
+                                <UserIcon className="w-3.5 h-3.5 absolute left-2 top-2 text-slate-400" />
+                                <select
+                                  value={todo.assignee}
+                                  onChange={e => handleTodoChange(idx, 'assignee', e.target.value)}
+                                  className="w-full text-xs pl-7 p-2 rounded border border-slate-200 focus:border-sage-400 outline-none appearance-none bg-white text-slate-600"
+                                >
+                                  <option value="">担当者を選択</option>
+                                  <option value="担当者未定">担当者未定</option>
+                                  {orgMembers.map((m, mIdx) => (
+                                    <option key={mIdx} value={m.username}>{m.username}</option>
+                                  ))}
+                                </select>
+                              </div>
+                              <div className="flex-1 flex gap-1 items-center">
+                                <div className="flex-1 relative">
+                                  <input
+                                    type="date"
+                                    value={todo.start_date}
+                                    onChange={e => handleTodoChange(idx, 'start_date', e.target.value)}
+                                    className="w-full text-[10px] p-2 rounded border border-slate-200 focus:border-sage-400 outline-none"
+                                    title="開始日"
+                                  />
+                                </div>
+                                <span className="text-slate-400 text-xs">〜</span>
+                                <div className="flex-1 relative">
+                                  <input
+                                    type="date"
+                                    value={todo.deadline}
+                                    onChange={e => handleTodoChange(idx, 'deadline', e.target.value)}
+                                    className="w-full text-[10px] p-2 rounded border border-slate-200 focus:border-sage-400 outline-none"
+                                    title="期限"
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <button
+                      onClick={handleAddTodo}
+                      className="mt-2 text-xs flex items-center gap-1 text-sage-600 hover:text-sage-800 font-bold hover:bg-sage-100 p-1.5 rounded transition-colors"
+                    >
+                      <span>+</span> To-Doを追加
+                    </button>
+                  </div>
+
+                  <div className="flex justify-end gap-2 pt-4 border-t border-sage-200/50">
+                    <button
+                      onClick={() => {
+                        setIsCreatingPolicy(false);
+                        setPolicyForm({ title: '', description: '', todos: [{ task: '', assignee: '', start_date: '', deadline: '', completed: false }] });
+                      }}
+                      className="text-sm px-4 py-2 text-slate-600 hover:bg-slate-200 rounded-lg transition-colors font-medium border border-transparent hover:border-slate-300"
+                    >
+                      キャンセル
+                    </button>
+                    <button
+                      onClick={handleCreatePolicy}
+                      disabled={isUpdating || !policyForm.title.trim()}
+                      className="text-sm bg-sage-600 hover:bg-sage-700 text-white px-5 py-2 rounded-lg transition-colors font-bold shadow-sm disabled:bg-sage-300 flex items-center gap-2"
+                    >
+                      {isUpdating ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span> : null}
+                      政策を立案
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {sessionPolicies.length > 0 ? (
+              <div className="space-y-4 mb-4">
+                {sessionPolicies.map(policy => {
+                  const isExpanded = expandedPolicyIds.includes(policy.id);
+                  const validTodosForGantt = (policy.todos && Array.isArray(policy.todos))
+                    ? policy.todos.filter((t: any) => t.start_date && t.deadline)
+                    : [];
+
+                  let minDate = 0, maxDate = 0, totalDays = 1;
+                  if (validTodosForGantt.length > 0) {
+                    minDate = Math.min(...validTodosForGantt.map((t: any) => new Date(t.start_date).getTime()));
+                    maxDate = Math.max(...validTodosForGantt.map((t: any) => new Date(t.deadline).getTime()));
+                    const msDay = 1000 * 3600 * 24;
+                    totalDays = Math.max(1, (maxDate - minDate) / msDay + 1);
+                  }
+
+                  return (
+                    <div key={policy.id} className="bg-white border border-slate-200 rounded-lg p-0 relative shadow-sm hover:shadow-md transition-shadow flex flex-col overflow-hidden group">
+                      <div
+                        className={`cursor-pointer p-4 flex items-center justify-between transition-colors ${isExpanded ? 'bg-sage-50/50' : 'bg-white hover:bg-slate-50'}`}
+                        onClick={() => togglePolicy(policy.id)}
+                      >
+                        <h5 className="font-bold text-sage-800 text-sm leading-tight pr-6 relative z-10 flex items-center gap-2">
+                          <span className={`transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''} text-slate-400`}>
+                            <ChevronDown className="w-4 h-4" />
+                          </span>
+                          <Target className="w-4 h-4 text-sage-500" />
+                          {policy.title}
+                        </h5>
+                        {/* Buttons moved to body */}
+                      </div>
+
+                      {isExpanded && editPolicyId !== policy.id && (
+                        <div className="p-4 pt-0 border-t border-sage-100/50 bg-white">
+                          <div className="flex items-center justify-between mb-3 pt-3 border-b border-sage-100 pb-2">
+                            <h4 className="text-sm font-bold text-sage-800 flex items-center gap-1.5"><FileEdit className="w-4 h-4 opacity-70" /> 政策の詳細</h4>
+                            {editPolicyId !== policy.id && (
+                              <div className="flex gap-2 items-center">
+                                <button
+                                  onClick={(e) => handleEditPolicyClick(policy, e)}
+                                  className="p-1.5 hover:bg-sage-100 rounded text-sage-600 bg-white shadow-sm border border-slate-100 transition-colors"
+                                  title="編集"
+                                >
+                                  <FileEdit className="w-3.5 h-3.5" />
+                                </button>
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); handleDeletePolicy(policy.id); }}
+                                  className="p-1.5 hover:bg-red-50 rounded text-red-500 bg-white shadow-sm border border-slate-100 transition-colors"
+                                  title="削除"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                          {policy.description && (
+                            <div className="mb-4 mt-3 bg-slate-50/50 p-3 rounded-md border border-slate-100">
+                              <p className="text-slate-600 whitespace-pre-wrap leading-relaxed text-xs">{policy.description}</p>
+                            </div>
+                          )}
+
+                          <div className="mt-4">
+                            <div className="flex items-center justify-between mb-2">
+                              <strong className="text-sage-700 block text-xs flex items-center gap-1.5 ">
+                                <ListTodo className="w-3.5 h-3.5" /> To-Doリスト
+                              </strong>
+                            </div>
+                            {policy.todos && Array.isArray(policy.todos) && policy.todos.length > 0 ? (
+                              <div className="space-y-2">
+                                {policy.todos.map((todo: any, idx: number) => (
+                                  <div key={idx} className={`flex items-start gap-3 p-3 rounded-md border text-xs transition-colors ${todo.completed ? 'bg-slate-50 border-slate-100 opacity-60' : 'bg-white border-slate-200 shadow-sm'}`}>
+                                    <button
+                                      onClick={() => handleToggleTodo(policy, idx)}
+                                      className={`mt-0.5 shrink-0 w-4 h-4 rounded-sm border flex items-center justify-center transition-colors ${todo.completed ? 'bg-sage-500 border-sage-500 text-white' : 'border-slate-300 hover:border-sage-400 bg-white'}`}
+                                    >
+                                      {todo.completed && <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
+                                    </button>
+                                    <div className="flex-1 min-w-0">
+                                      <p className={`font-medium text-sm leading-tight ${todo.completed ? 'line-through text-slate-400' : 'text-slate-800'}`}>{todo.task}</p>
+                                      {(todo.assignee || todo.start_date || todo.deadline) && (
+                                        <div className="flex flex-wrap gap-x-4 gap-y-2 mt-2 text-[11px] text-slate-500">
+                                          {todo.assignee && <span className="flex items-center gap-1 bg-slate-100 px-1.5 py-0.5 rounded text-slate-600"><UserIcon className="w-3 h-3" /> {todo.assignee === '担当者未定' ? <span className="italic text-slate-400">未定</span> : todo.assignee}</span>}
+                                          {(todo.start_date || todo.deadline) && (
+                                            <span className="flex items-center gap-1 bg-slate-100 px-1.5 py-0.5 rounded text-slate-600">
+                                              <Calendar className="w-3 h-3" />
+                                              {todo.start_date ? new Date(todo.start_date).toLocaleDateString() : '未設定'} 〜 {todo.deadline ? new Date(todo.deadline).toLocaleDateString() : '未設定'}
+                                            </span>
+                                          )}
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <p className="text-xs text-slate-400 p-2 bg-slate-50 rounded border border-slate-100">タスクは登録されていません</p>
+                            )}
+                          </div>
+
+                          {/* Monthly Gantt Chart */}
+                          {validTodosForGantt.length > 0 && (() => {
+                            const mapDate = ganttMonths[policy.id] || new Date();
+                            const currentYear = mapDate.getFullYear();
+                            const currentMonth = mapDate.getMonth();
+
+                            const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+                            const monthStartDate = new Date(currentYear, currentMonth, 1).getTime();
+                            const monthEndDate = new Date(currentYear, currentMonth + 1, 0, 23, 59, 59).getTime();
+                            const msDay = 1000 * 3600 * 24;
+
+                            const shiftMonth = (offset: number) => {
+                              const newDate = new Date(currentYear, currentMonth + offset, 1);
+                              setGanttMonths(prev => ({ ...prev, [policy.id]: newDate }));
+                            };
+
+                            return (
+                              <div className="mt-6 pt-5 border-t border-slate-100">
+                                <div className="flex items-center justify-between mb-3">
+                                  <strong className="text-sage-700 text-xs flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5" />ガントチャート (スケジュール)</strong>
+                                  <div className="flex items-center gap-2 bg-slate-50 rounded-md border border-slate-200 px-1 py-0.5">
+                                    <button onClick={() => shiftMonth(-1)} className="p-1 hover:bg-slate-200 rounded text-slate-500"><ChevronLeft className="w-3 h-3" /></button>
+                                    <span className="text-[11px] font-bold text-slate-700 min-w-[60px] text-center">{currentYear}年 {currentMonth + 1}月</span>
+                                    <button onClick={() => shiftMonth(1)} className="p-1 hover:bg-slate-200 rounded text-slate-500"><ChevronRight className="w-3 h-3" /></button>
+                                  </div>
+                                </div>
+
+                                <div className="border border-slate-200 rounded-md overflow-hidden bg-white">
+                                  {/* Days Header */}
+                                  <div className="flex bg-slate-50 border-b border-slate-200">
+                                    {Array.from({ length: daysInMonth }).map((_, i) => (
+                                      <div key={i} className="flex-1 text-center text-[8px] py-1 border-r border-slate-100 last:border-0 text-slate-500">
+                                        {i + 1}
+                                      </div>
+                                    ))}
+                                  </div>
+
+                                  {/* Tasks */}
+                                  <div className="relative py-2 space-y-2">
+                                    {validTodosForGantt.map((t: any, idx: number) => {
+                                      const start = new Date(t.start_date).getTime();
+                                      const end = new Date(t.deadline).getTime();
+
+                                      // Check if task overlaps with this month
+                                      if (end < monthStartDate || start > monthEndDate) return null;
+
+                                      // Calculate position within current month
+                                      const visibleStart = Math.max(start, monthStartDate);
+                                      const visibleEnd = Math.min(end, monthEndDate);
+
+                                      const startOffsetDays = (visibleStart - monthStartDate) / msDay;
+                                      const visibleDurationDays = (visibleEnd - visibleStart) / msDay + 1;
+
+                                      const leftPct = (startOffsetDays / daysInMonth) * 100;
+                                      const widthPct = (visibleDurationDays / daysInMonth) * 100;
+
+                                      return (
+                                        <div key={idx} className="relative h-6 text-[10px] flex items-center w-full group/gantt px-[1px]">
+                                          <div
+                                            className={`absolute h-5 rounded-sm flex items-center px-1.5 text-white overflow-hidden whitespace-nowrap text-[9px] shadow-sm transition-all ${t.completed ? 'bg-slate-400/80' : ''} ${start < monthStartDate ? 'rounded-l-none border-l-2 border-slate-400 border-dashed' : ''} ${end > monthEndDate ? 'rounded-r-none border-r-2 border-slate-400 border-dashed' : ''}`}
+                                            style={{ left: `${leftPct}%`, width: `${widthPct}%`, minWidth: '4px', backgroundColor: t.completed ? undefined : COLOR_PALETTE[idx % COLOR_PALETTE.length] }}
+                                            title={`${t.task} (${t.start_date} ~ ${t.deadline})`}
+                                          >
+                                            <span className="truncate w-full font-medium drop-shadow-md text-slate-800 mix-blend-color-burn">
+                                              {t.task}
+                                              {t.assignee && (
+                                                <span className="ml-1 opacity-80 text-[8px] font-normal">
+                                                  ({t.assignee === '担当者未定' ? '未定' : t.assignee})
+                                                </span>
+                                              )}
+                                            </span>
+                                          </div>
+                                        </div>
+                                      );
+                                    })}
+
+                                    {/* Vertical grid lines */}
+                                    <div className="absolute inset-0 flex pointer-events-none mt-0">
+                                      {Array.from({ length: daysInMonth }).map((_, i) => (
+                                        <div key={i} className="flex-1 border-r border-slate-100/50 last:border-0 h-full"></div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })()}
+
+                        </div>
+                      )}
+
+                      {/* Edit Policy UI inline */}
+                      {isExpanded && editPolicyId === policy.id && editPolicyForm && (
+                        <div className="p-4 border-t border-sage-200 bg-sage-50/30">
+                          <div className="flex items-center justify-between mb-3 pb-2 border-b border-sage-200/50">
+                            <h4 className="text-sm font-bold text-sage-800 flex items-center gap-1.5"><FileEdit className="w-4 h-4" /> 政策の編集</h4>
+                            <div className="flex gap-2">
+                              <button onClick={handleCancelEditPolicy} className="text-xs px-2 py-1 bg-white border border-slate-300 rounded hover:bg-slate-50 text-slate-600 font-bold transition-colors">キャンセル</button>
+                              <button onClick={handleSaveEditPolicy} disabled={isUpdating} className="text-xs px-2 py-1 bg-sage-600 border border-sage-600 rounded hover:bg-sage-700 text-white font-bold transition-colors flex items-center gap-1"><Save className="w-3 h-3" /> 保存</button>
+                            </div>
+                          </div>
+
+                          <div className="space-y-4">
+                            <div>
+                              <label className="block text-[11px] font-bold text-slate-600 mb-1">政策名称</label>
+                              <input type="text" value={editPolicyForm.title} onChange={e => setEditPolicyForm({ ...editPolicyForm, title: e.target.value })} className="w-full text-sm p-2 rounded border border-slate-300 focus:outline-none focus:ring-2 focus:ring-sage-500/50" />
+                            </div>
+                            <div>
+                              <label className="block text-[11px] font-bold text-slate-600 mb-1">説明</label>
+                              <textarea value={editPolicyForm.description} onChange={e => setEditPolicyForm({ ...editPolicyForm, description: e.target.value })} className="w-full text-sm p-2 rounded border border-slate-300 focus:outline-none focus:ring-2 focus:ring-sage-500/50 min-h-[60px]" />
+                            </div>
+                            <div>
+                              <label className="block text-[11px] font-bold text-slate-600 mb-2 border-b border-slate-200 pb-1">To-Do リスト</label>
+                              <div className="space-y-3">
+                                {editPolicyForm.todos.map((todo: any, idx: number) => (
+                                  <div key={idx} className="flex gap-2 items-start bg-white p-2.5 rounded border border-slate-200 relative group shadow-sm">
+                                    <button onClick={() => handleEditRemoveTodo(idx)} className="absolute -top-2 -right-2 bg-red-100 text-red-500 rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity z-10" title="削除">
+                                      <X className="w-3.5 h-3.5" />
+                                    </button>
+
+                                    <div className="pt-1.5 pl-1 pr-2">
+                                      <input type="checkbox" checked={todo.completed} onChange={() => handleEditToggleTodo(idx)} className="w-4 h-4 text-sage-600 rounded focus:ring-sage-500 border-slate-300" title="完了マーク" />
+                                    </div>
+
+                                    <div className="flex-1 flex flex-col gap-2">
+                                      <input type="text" value={todo.task} onChange={e => handleEditTodoChange(idx, 'task', e.target.value)} placeholder="タスク内容" className="w-full text-xs p-2 rounded border border-slate-200 focus:border-sage-400 focus:ring-1 focus:ring-sage-400 outline-none" />
+                                      <div className="flex flex-col md:flex-row gap-2">
+                                        <div className="flex-1 relative">
+                                          <UserIcon className="w-3.5 h-3.5 absolute left-2 top-2.5 text-slate-400" />
+                                          <select value={todo.assignee} onChange={e => handleEditTodoChange(idx, 'assignee', e.target.value)} className="w-full text-[11px] pl-7 p-2 rounded border border-slate-200 focus:border-sage-400 outline-none appearance-none bg-slate-50 text-slate-700">
+                                            <option value="">担当者を選択</option>
+                                            <option value="担当者未定">担当者未定</option>
+                                            {orgMembers.map((m, mIdx) => (<option key={mIdx} value={m.username}>{m.username}</option>))}
+                                          </select>
+                                        </div>
+                                        <div className="flex-1 flex gap-1 items-center">
+                                          <div className="flex-1 relative">
+                                            <input type="date" value={todo.start_date || ''} onChange={e => handleEditTodoChange(idx, 'start_date', e.target.value)} className="w-full text-[10px] p-2 rounded border border-slate-200 focus:border-sage-400 outline-none bg-slate-50" title="開始日" />
+                                          </div>
+                                          <span className="text-slate-400 text-xs">〜</span>
+                                          <div className="flex-1 relative">
+                                            <input type="date" value={todo.deadline || ''} onChange={e => handleEditTodoChange(idx, 'deadline', e.target.value)} className="w-full text-[10px] p-2 rounded border border-slate-200 focus:border-sage-400 outline-none bg-slate-50" title="期限" />
+                                          </div>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                              <button onClick={handleEditAddTodo} className="mt-3 text-xs flex items-center gap-1 text-sage-600 hover:text-sage-800 font-bold hover:bg-sage-50 px-2 py-1.5 rounded transition-colors border border-transparent hover:border-sage-200">
+                                <span>+</span> To-Doを追加
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              !isCreatingPolicy && (
+                <div className="text-center py-10 bg-white/50 border border-dashed border-slate-200 rounded-lg text-slate-400">
+                  まだ政策は立案されていません
+                </div>
+              )
+            )}
+
+            {/* Policy Create Form */}
+            {isCreatingPolicy && (
+              <div className="bg-slate-50 border border-sage-200 rounded-lg p-4 md:p-6 shadow-sm animate-in fade-in slide-in-from-top-2 relative z-20">
+                <h4 className="text-sm font-bold text-sage-800 mb-4 border-b border-sage-200/50 pb-2">新しい政策を立案する</h4>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-600 mb-1">政策名称 <span className="text-red-500">*</span></label>
+                    <input
+                      type="text"
+                      value={policyForm.title}
+                      onChange={e => setPolicyForm({ ...policyForm, title: e.target.value })}
+                      placeholder="例: 会議のガイドライン制定"
+                      className="w-full text-sm p-2.5 rounded border border-slate-300 focus:outline-none focus:ring-2 focus:ring-sage-500/50"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-600 mb-1">説明 (任意)</label>
+                    <textarea
+                      value={policyForm.description}
+                      onChange={e => setPolicyForm({ ...policyForm, description: e.target.value })}
+                      placeholder="政策の目的や背景など"
+                      className="w-full text-sm p-2.5 rounded border border-slate-300 focus:outline-none focus:ring-2 focus:ring-sage-500/50 min-h-[60px]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-600 mb-2 border-b pb-1">To-Do リスト</label>
+                    <div className="space-y-3">
+                      {policyForm.todos.map((todo, idx) => (
+                        <div key={idx} className="flex gap-2 items-start bg-white p-2 rounded border border-slate-200 relative group">
+                          <button
+                            onClick={() => handleRemoveTodo(idx)}
+                            className="absolute -top-2 -right-2 bg-red-100 text-red-500 rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                            title="削除"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                          <div className="flex-1 flex flex-col gap-2">
+                            <input
+                              type="text"
+                              value={todo.task}
+                              onChange={e => handleTodoChange(idx, 'task', e.target.value)}
+                              placeholder="タスク内容"
+                              className="w-full text-xs p-2 rounded border border-slate-200 focus:border-sage-400 focus:ring-1 focus:ring-sage-400 outline-none"
+                            />
+                            <div className="flex gap-2">
+                              <div className="flex-1 relative">
+                                <UserIcon className="w-3.5 h-3.5 absolute left-2 top-2 text-slate-400" />
+                                <select
+                                  value={todo.assignee}
+                                  onChange={e => handleTodoChange(idx, 'assignee', e.target.value)}
+                                  className="w-full text-xs pl-7 p-2 rounded border border-slate-200 focus:border-sage-400 outline-none appearance-none bg-white text-slate-600"
+                                >
+                                  <option value="">担当者を選択</option>
+                                  <option value="担当者未定">担当者未定</option>
+                                  {orgMembers.map((m, mIdx) => (
+                                    <option key={mIdx} value={m.username}>{m.username}</option>
+                                  ))}
+                                </select>
+                              </div>
+                              <div className="flex-1 flex gap-1 items-center">
+                                <div className="flex-1 relative">
+                                  <input
+                                    type="date"
+                                    value={todo.start_date}
+                                    onChange={e => handleTodoChange(idx, 'start_date', e.target.value)}
+                                    className="w-full text-[10px] p-2 rounded border border-slate-200 focus:border-sage-400 outline-none"
+                                    title="開始日"
+                                  />
+                                </div>
+                                <span className="text-slate-400 text-xs">〜</span>
+                                <div className="flex-1 relative">
+                                  <input
+                                    type="date"
+                                    value={todo.deadline}
+                                    onChange={e => handleTodoChange(idx, 'deadline', e.target.value)}
+                                    className="w-full text-[10px] p-2 rounded border border-slate-200 focus:border-sage-400 outline-none"
+                                    title="期限"
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    <button
+                      onClick={handleAddTodo}
+                      className="mt-3 text-xs flex items-center gap-1 text-sage-600 hover:text-sage-800 font-bold hover:bg-sage-50 px-2 py-1 rounded transition-colors"
+                    >
+                      <span>+</span> To-Doを追加
+                    </button>
+                  </div>
+
+                  <div className="flex justify-end gap-3 pt-4 border-t border-slate-200 mt-4">
+                    <button
+                      onClick={() => {
+                        setIsCreatingPolicy(false);
+                        setPolicyForm({ title: '', description: '', todos: [{ task: '', assignee: '', start_date: '', deadline: '', completed: false }] });
+                      }}
+                      className="text-sm px-4 py-2 text-slate-600 hover:bg-slate-200 rounded-lg transition-colors font-medium border border-transparent hover:border-slate-300"
+                    >
+                      キャンセル
+                    </button>
+                    <button
+                      onClick={handleCreatePolicy}
+                      disabled={!policyForm.title.trim() || isUpdating}
+                      className="text-sm px-5 py-2 bg-sage-600 hover:bg-sage-700 text-white rounded-lg transition-colors font-bold disabled:opacity-50 shadow-sm"
+                    >
+                      保存する
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </section>
         </div>
 

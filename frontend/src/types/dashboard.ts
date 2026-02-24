@@ -23,6 +23,15 @@ export interface CommentItem {
   liked_by_current_user?: boolean; // Optional if we track this
 }
 
+export interface PolicyItem {
+  id: number;
+  issue_id: string | null;
+  title: string;
+  description: string;
+  todos: any; // Can be a string or parsed JSON object depending on how it's sent
+  created_at: string;
+}
+
 export interface SessionDetail {
   id: number;
   title: string;
@@ -34,6 +43,7 @@ export interface SessionDetail {
   comments: CommentItem[];
   comment_analysis?: string; // If available in API
   is_comment_analysis_published?: boolean;
+  policies?: PolicyItem[];
 }
 
 export interface SurveySummary {

@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 import json
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import desc
-from typing import List, Optional
+from typing import List, Optional, Any
 from pydantic import BaseModel
 from datetime import datetime
 import random
@@ -11,7 +11,7 @@ import io
 import re
 from urllib.parse import quote
 
-from backend.database import SessionLocal, AnalysisSession, AnalysisResult, IssueDefinition, Survey, Comment, CommentLike, Answer, get_db, OrganizationMember, User
+from backend.database import SessionLocal, AnalysisSession, AnalysisResult, IssueDefinition, Survey, Comment, CommentLike, Answer, get_db, OrganizationMember, User, Policy
 from backend.api.auth import get_current_user, UserResponse
 from backend.services.notification_service import create_notification, notify_organization_members, notify_organization_admins
 
@@ -85,6 +85,14 @@ class CommentItem(BaseModel):
     likes_count: int
     parent_id: Optional[int]
 
+class PolicyItem(BaseModel):
+    id: int
+    issue_id: Optional[str]
+    title: str
+    description: str
+    todos: Any
+    created_at: datetime
+
 class SessionDetail(BaseModel):
     id: int
     title: str
@@ -95,6 +103,7 @@ class SessionDetail(BaseModel):
     comments: List[CommentItem] = []
     comment_analysis: Optional[str] = None
     is_comment_analysis_published: bool = False
+    policies: List[PolicyItem] = []
 
 @router.get("/sessions", response_model=List[SessionSummary])
 def get_sessions(
@@ -189,7 +198,17 @@ def get_session_detail(
         ],
         comments=comment_items,
         comment_analysis=session.comment_analysis if comment_analysis_visible else None,
-        is_comment_analysis_published=session.is_comment_analysis_published
+        is_comment_analysis_published=session.is_comment_analysis_published,
+        policies=[
+            PolicyItem(
+                id=p.id,
+                issue_id=p.issue_id,
+                title=p.title,
+                description=p.description,
+                todos=p.todos,
+                created_at=p.created_at
+            ) for p in session.policies
+        ]
     )
 
 @router.put("/sessions/{session_id}/publish")
@@ -272,7 +291,6 @@ def delete_session(
     db: Session = Depends(get_db)
 ):
     # Only Admin
-    # Only Admin
     is_admin = current_user.role in ['admin', 'system_admin'] or current_user.org_role == 'admin'
     if not is_admin:
          raise HTTPException(status_code=403, detail="Permission denied")
@@ -288,6 +306,118 @@ def delete_session(
     db.delete(session)
     db.commit()
     return {"message": "Session deleted"}
+
+class PolicyRequest(BaseModel):
+    issue_id: Optional[str] = None
+    title: str
+    description: str
+    todos: Any
+
+@router.post("/sessions/{session_id}/policies", response_model=PolicyItem)
+def create_policy(
+    session_id: int,
+    payload: PolicyRequest,
+    current_user: UserResponse = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    session = db.query(AnalysisSession).filter(
+        AnalysisSession.id == session_id,
+        AnalysisSession.organization_id == current_user.current_org_id
+    ).first()
+    
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+        
+    # Check permissions (admins only, or any user?) Usually creating a policy might mean it's an admin flow.
+    # Allowing any user or admins only? We'll allow admins or session admins.
+    is_admin = current_user.role in ['admin', 'system_admin'] or current_user.org_role == 'admin'
+    if not is_admin:
+         raise HTTPException(status_code=403, detail="Permission denied")
+
+    new_policy = Policy(
+        session_id=session_id,
+        issue_id=payload.issue_id,
+        title=payload.title,
+        description=payload.description,
+        todos=payload.todos
+    )
+    db.add(new_policy)
+    db.commit()
+    db.refresh(new_policy)
+    
+    return PolicyItem(
+        id=new_policy.id,
+        issue_id=new_policy.issue_id,
+        title=new_policy.title,
+        description=new_policy.description,
+        todos=new_policy.todos,
+        created_at=new_policy.created_at
+    )
+
+@router.put("/policies/{policy_id}", response_model=PolicyItem)
+def update_policy(
+    policy_id: int,
+    payload: PolicyRequest,
+    current_user: UserResponse = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    is_admin = current_user.role in ['admin', 'system_admin'] or current_user.org_role == 'admin'
+    if not is_admin:
+         raise HTTPException(status_code=403, detail="Permission denied")
+
+    policy = db.query(Policy).filter(Policy.id == policy_id).first()
+    if not policy:
+        raise HTTPException(status_code=404, detail="Policy not found")
+
+    # Verify session org matches current user org
+    session = db.query(AnalysisSession).filter(
+        AnalysisSession.id == policy.session_id,
+        AnalysisSession.organization_id == current_user.current_org_id
+    ).first()
+    if not session:
+        raise HTTPException(status_code=404, detail="Policy session not found handling organization context")
+
+    policy.issue_id = payload.issue_id
+    policy.title = payload.title
+    policy.description = payload.description
+    policy.todos = payload.todos
+    
+    db.commit()
+    db.refresh(policy)
+    
+    return PolicyItem(
+        id=policy.id,
+        issue_id=policy.issue_id,
+        title=policy.title,
+        description=policy.description,
+        todos=policy.todos,
+        created_at=policy.created_at
+    )
+
+@router.delete("/policies/{policy_id}")
+def delete_policy(
+    policy_id: int,
+    current_user: UserResponse = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    is_admin = current_user.role in ['admin', 'system_admin'] or current_user.org_role == 'admin'
+    if not is_admin:
+         raise HTTPException(status_code=403, detail="Permission denied")
+
+    policy = db.query(Policy).filter(Policy.id == policy_id).first()
+    if not policy:
+        raise HTTPException(status_code=404, detail="Policy not found")
+
+    session = db.query(AnalysisSession).filter(
+        AnalysisSession.id == policy.session_id,
+        AnalysisSession.organization_id == current_user.current_org_id
+    ).first()
+    if not session:
+        raise HTTPException(status_code=404, detail="Policy session not found handling organization context")
+
+    db.delete(policy)
+    db.commit()
+    return {"message": "Policy deleted"}
 
 @router.post("/sessions/analyze")
 def run_analysis_endpoint(
