@@ -35,6 +35,7 @@
 | **questions** | answers | 1:N | 設問に対する回答（回答は設問にも紐付く） |
 | **analysis_sessions** | analysis_results | 1:N | 分析結果詳細 |
 | **analysis_sessions** | issue_definitions | 1:N | 課題レポート |
+| **analysis_sessions** | policies | 1:N | 政策リスト |
 | **analysis_sessions** | comments | 1:N | ディスカッション |
 | **comments** | comment_likes | 1:N | いいね |
 | **comments** | comments | 1:N | 返信（自己参照・階層構造） |
@@ -136,6 +137,20 @@ AI分析の実行単位（セッション）を管理します。
 | `id` | Integer | ID (主キー)。 |
 | `session_id` | Integer | 紐付く分析セッションID (外部キー)。 |
 | `content` | Text | AI生成レポートのMarkdownテキスト。 |
+
+### 政策リスト (`policies`)
+議論から生まれたアイデアを具体的なToDoとスケジュール付きの政策として立案・管理します。
+
+| カラム名 | 型 | 説明 |
+| :--- | :--- | :--- |
+| `id` | Integer | ID (主キー)。 |
+| `session_id` | Integer | 紐付く分析セッションID (外部キー)。 |
+| `issue_id` | String | 紐づく課題のIDまたはタイトル（任意）。 |
+| `title` | String | 政策名。 |
+| `description` | Text | 政策の説明。 |
+| `todos` | JSON | 実現までのToDoリスト。`[{"task": "...", "assignee": "...", "start_date": "...", "deadline": "...", "completed": false}]` |
+| `created_at` | DateTime | 作成日時。 |
+| `updated_at` | DateTime | 最終更新日時。 |
 
 ### コメント/チャット (`comments`)
 分析レポートに対するユーザーからのフィードバックや議論を格納します。
