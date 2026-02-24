@@ -35,6 +35,10 @@ function DashboardContent() {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any | null>(null);
 
+  // 政策からのFBアンケート作成用パラメータ
+  const surveyTitleParam = searchParams?.get('survey_title');
+  const surveyQuestionParam = searchParams?.get('survey_question');
+
   // Sync activeTab with URL
   useEffect(() => {
     if (urlTab) {
@@ -205,7 +209,11 @@ function DashboardContent() {
 
           {/* 4. Surveys (Admin) */}
           {activeTab === 'surveys' && isAdmin && (
-            <SurveyManager user={user} />
+            <SurveyManager
+              user={user}
+              initialTitle={surveyTitleParam || undefined}
+              initialQuestions={surveyQuestionParam ? [{ text: surveyQuestionParam, is_required: true, order: 1 }] : undefined}
+            />
           )}
 
           {/* 5. Requests (User) */}

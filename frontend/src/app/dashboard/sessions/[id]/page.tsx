@@ -1168,6 +1168,21 @@ function SessionDetailContent() {
                             <h4 className="text-sm font-bold text-sage-800 flex items-center gap-1.5"><FileEdit className="w-4 h-4 opacity-70" /> 政策の詳細</h4>
                             {editPolicyId !== policy.id && (
                               <div className="flex gap-2 items-center">
+                                {isAdmin && (
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      const encodedTitle = encodeURIComponent(policy.title);
+                                      const encodedQuestion = encodeURIComponent('本政策についてのフィードバックのご意見をください');
+                                      router.push(`/dashboard?tab=surveys&survey_title=${encodedTitle}&survey_question=${encodedQuestion}`);
+                                    }}
+                                    className="flex items-center gap-1 text-[10px] px-2 py-1.5 bg-sage-600 hover:bg-sage-700 text-white border border-sage-600 rounded font-bold transition-colors shadow-sm"
+                                    title="FBアンケートを作成する"
+                                  >
+                                    <FileText className="w-3 h-3" />
+                                    FBアンケートを作成
+                                  </button>
+                                )}
                                 <button
                                   onClick={(e) => handleEditPolicyClick(policy, e)}
                                   className="p-1.5 hover:bg-sage-100 rounded text-sage-600 bg-white shadow-sm border border-slate-100 transition-colors"

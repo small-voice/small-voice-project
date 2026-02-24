@@ -20,7 +20,13 @@ interface User {
   org_role?: string;
 }
 
-export default function SurveyManager({ user: propUser }: { user?: User }) {
+interface SurveyManagerProps {
+  user?: User;
+  initialTitle?: string;
+  initialQuestions?: QuestionDraft[];
+}
+
+export default function SurveyManager({ user: propUser, initialTitle, initialQuestions }: SurveyManagerProps) {
   const [surveys, setSurveys] = useState<SurveySummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState<'list' | 'create' | 'edit'>('list');
@@ -38,6 +44,17 @@ export default function SurveyManager({ user: propUser }: { user?: User }) {
     fetchSurveys();
     if (!user) fetchUser();
   }, [propUser]);
+
+  // 初期値がpropsで渡された場合はcreateビューを自動オープン
+  useEffect(() => {
+    if (initialTitle) {
+      setTitle(initialTitle);
+      setView('create');
+    }
+    if (initialQuestions && initialQuestions.length > 0) {
+      setQuestions(initialQuestions);
+    }
+  }, [initialTitle, initialQuestions]);
 
   const fetchUser = async () => {
     try {
