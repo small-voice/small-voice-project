@@ -173,7 +173,7 @@ export default function LandingPage() {
                       <Brain className="w-8 h-8" />
                     </div>
                     <div>
-                      <h4 className="text-xl font-bold text-sage-900 mb-3">「広聴」・「対話」・「立案」をシームレスに実現する空間設計</h4>
+                      <h4 className="text-xl font-bold text-sage-900 mb-3">広聴〜対話〜立案をシームレスに実現する空間設計</h4>
                       <div className="space-y-3">
                         <p className="text-slate-600 leading-relaxed">
                           収集した声を収集しただけで終わらせず、解決まで一気通貫で繋げるシームレスなブロードリスニングを実現します。
@@ -211,7 +211,7 @@ export default function LandingPage() {
                             <CheckCircle2 className="w-5 h-5 text-sage-500 mt-0.5 shrink-0" />
                             <span>
                               <span className="font-bold text-sage-800 block mb-1">政策リスト</span>
-                              対話から生まれたアイデアを、具体的なToDoとスケジュール付きの「政策」として立案・管理し、実行に移します。
+                              対話から生まれたアイデアを、具体的なToDoとスケジュール付きの政策として立案、管理し、実行に移します。
                             </span>
                           </li>
                         </ul>
