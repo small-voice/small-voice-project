@@ -328,11 +328,7 @@ def create_policy(
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
         
-    # Check permissions (admins only, or any user?) Usually creating a policy might mean it's an admin flow.
-    # Allowing any user or admins only? We'll allow admins or session admins.
-    is_admin = current_user.role in ['admin', 'system_admin'] or current_user.org_role == 'admin'
-    if not is_admin:
-         raise HTTPException(status_code=403, detail="Permission denied")
+    # Allow all members of the organization to create policies
 
     new_policy = Policy(
         session_id=session_id,
@@ -361,9 +357,7 @@ def update_policy(
     current_user: UserResponse = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    is_admin = current_user.role in ['admin', 'system_admin'] or current_user.org_role == 'admin'
-    if not is_admin:
-         raise HTTPException(status_code=403, detail="Permission denied")
+    # Allow all members of the organization to update policies
 
     policy = db.query(Policy).filter(Policy.id == policy_id).first()
     if not policy:
@@ -400,9 +394,7 @@ def delete_policy(
     current_user: UserResponse = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    is_admin = current_user.role in ['admin', 'system_admin'] or current_user.org_role == 'admin'
-    if not is_admin:
-         raise HTTPException(status_code=403, detail="Permission denied")
+    # Allow all members of the organization to delete policies
 
     policy = db.query(Policy).filter(Policy.id == policy_id).first()
     if not policy:

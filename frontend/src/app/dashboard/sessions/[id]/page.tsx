@@ -1209,7 +1209,7 @@ function SessionDetailContent() {
                                   <strong className="text-sage-700 text-xs flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5" />ガントチャート (スケジュール)</strong>
                                   <div className="flex items-center gap-2 bg-slate-50 rounded-md border border-slate-200 px-1 py-0.5">
                                     <button onClick={() => shiftMonth(-1)} className="p-1 hover:bg-slate-200 rounded text-slate-500"><ChevronLeft className="w-3 h-3" /></button>
-                                    <span className="text-[11px] font-bold text-slate-700 min-w-[60px] text-center">{currentYear}年 {currentMonth + 1}月</span>
+                                    <span className="text-[11px] font-bold text-black min-w-[60px] text-center">{currentYear}年 {currentMonth + 1}月</span>
                                     <button onClick={() => shiftMonth(1)} className="p-1 hover:bg-slate-200 rounded text-slate-500"><ChevronRight className="w-3 h-3" /></button>
                                   </div>
                                 </div>
@@ -1218,7 +1218,7 @@ function SessionDetailContent() {
                                   {/* Days Header */}
                                   <div className="flex bg-slate-50 border-b border-slate-200">
                                     {Array.from({ length: daysInMonth }).map((_, i) => (
-                                      <div key={i} className="flex-1 text-center text-[8px] py-1 border-r border-slate-100 last:border-0 text-slate-500">
+                                      <div key={i} className="flex-1 text-center text-[8px] py-1 border-r border-slate-100 last:border-0 text-black">
                                         {i + 1}
                                       </div>
                                     ))}
@@ -1246,14 +1246,14 @@ function SessionDetailContent() {
                                       return (
                                         <div key={idx} className="relative h-6 text-[10px] flex items-center w-full group/gantt px-[1px]">
                                           <div
-                                            className={`absolute h-5 rounded-sm flex items-center px-1.5 text-white overflow-hidden whitespace-nowrap text-[9px] shadow-sm transition-all ${t.completed ? 'bg-slate-400/80' : ''} ${start < monthStartDate ? 'rounded-l-none border-l-2 border-slate-400 border-dashed' : ''} ${end > monthEndDate ? 'rounded-r-none border-r-2 border-slate-400 border-dashed' : ''}`}
+                                            className={`absolute h-5 rounded-sm flex items-center px-1.5 text-black overflow-hidden whitespace-nowrap text-[9px] shadow-sm transition-all ${t.completed ? 'bg-slate-400/80' : ''} ${start < monthStartDate ? 'rounded-l-none border-l-2 border-slate-400 border-dashed' : ''} ${end > monthEndDate ? 'rounded-r-none border-r-2 border-slate-400 border-dashed' : ''}`}
                                             style={{ left: `${leftPct}%`, width: `${widthPct}%`, minWidth: '4px', backgroundColor: t.completed ? undefined : COLOR_PALETTE[idx % COLOR_PALETTE.length] }}
                                             title={`${t.task} (${t.start_date} ~ ${t.deadline})`}
                                           >
-                                            <span className="truncate w-full font-medium drop-shadow-md text-slate-800 mix-blend-color-burn">
+                                            <span className="truncate w-full font-medium text-black">
                                               {t.task}
                                               {t.assignee && (
-                                                <span className="ml-1 opacity-80 text-[8px] font-normal">
+                                                <span className="ml-1 opacity-100 text-[8px] font-normal">
                                                   ({t.assignee === '担当者未定' ? '未定' : t.assignee})
                                                 </span>
                                               )}
@@ -1355,122 +1355,6 @@ function SessionDetailContent() {
               )
             )}
 
-            {/* Policy Create Form */}
-            {isCreatingPolicy && (
-              <div className="bg-slate-50 border border-sage-200 rounded-lg p-4 md:p-6 shadow-sm animate-in fade-in slide-in-from-top-2 relative z-20">
-                <h4 className="text-sm font-bold text-sage-800 mb-4 border-b border-sage-200/50 pb-2">新しい政策を立案する</h4>
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-xs font-bold text-slate-600 mb-1">政策名称 <span className="text-red-500">*</span></label>
-                    <input
-                      type="text"
-                      value={policyForm.title}
-                      onChange={e => setPolicyForm({ ...policyForm, title: e.target.value })}
-                      placeholder="例: 会議のガイドライン制定"
-                      className="w-full text-sm p-2.5 rounded border border-slate-300 focus:outline-none focus:ring-2 focus:ring-sage-500/50"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-slate-600 mb-1">説明 (任意)</label>
-                    <textarea
-                      value={policyForm.description}
-                      onChange={e => setPolicyForm({ ...policyForm, description: e.target.value })}
-                      placeholder="政策の目的や背景など"
-                      className="w-full text-sm p-2.5 rounded border border-slate-300 focus:outline-none focus:ring-2 focus:ring-sage-500/50 min-h-[60px]"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-slate-600 mb-2 border-b pb-1">To-Do リスト</label>
-                    <div className="space-y-3">
-                      {policyForm.todos.map((todo, idx) => (
-                        <div key={idx} className="flex gap-2 items-start bg-white p-2 rounded border border-slate-200 relative group">
-                          <button
-                            onClick={() => handleRemoveTodo(idx)}
-                            className="absolute -top-2 -right-2 bg-red-100 text-red-500 rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity z-10"
-                            title="削除"
-                          >
-                            <X className="w-3.5 h-3.5" />
-                          </button>
-                          <div className="flex-1 flex flex-col gap-2">
-                            <input
-                              type="text"
-                              value={todo.task}
-                              onChange={e => handleTodoChange(idx, 'task', e.target.value)}
-                              placeholder="タスク内容"
-                              className="w-full text-xs p-2 rounded border border-slate-200 focus:border-sage-400 focus:ring-1 focus:ring-sage-400 outline-none"
-                            />
-                            <div className="flex gap-2">
-                              <div className="flex-1 relative">
-                                <UserIcon className="w-3.5 h-3.5 absolute left-2 top-2 text-slate-400" />
-                                <select
-                                  value={todo.assignee}
-                                  onChange={e => handleTodoChange(idx, 'assignee', e.target.value)}
-                                  className="w-full text-xs pl-7 p-2 rounded border border-slate-200 focus:border-sage-400 outline-none appearance-none bg-white text-slate-600"
-                                >
-                                  <option value="">担当者を選択</option>
-                                  <option value="担当者未定">担当者未定</option>
-                                  {orgMembers.map((m, mIdx) => (
-                                    <option key={mIdx} value={m.username}>{m.username}</option>
-                                  ))}
-                                </select>
-                              </div>
-                              <div className="flex-1 flex gap-1 items-center">
-                                <div className="flex-1 relative">
-                                  <input
-                                    type="date"
-                                    value={todo.start_date}
-                                    onChange={e => handleTodoChange(idx, 'start_date', e.target.value)}
-                                    className="w-full text-[10px] p-2 rounded border border-slate-200 focus:border-sage-400 outline-none"
-                                    title="開始日"
-                                  />
-                                </div>
-                                <span className="text-slate-400 text-xs">〜</span>
-                                <div className="flex-1 relative">
-                                  <input
-                                    type="date"
-                                    value={todo.deadline}
-                                    onChange={e => handleTodoChange(idx, 'deadline', e.target.value)}
-                                    className="w-full text-[10px] p-2 rounded border border-slate-200 focus:border-sage-400 outline-none"
-                                    title="期限"
-                                  />
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-
-                    <button
-                      onClick={handleAddTodo}
-                      className="mt-3 text-xs flex items-center gap-1 text-sage-600 hover:text-sage-800 font-bold hover:bg-sage-50 px-2 py-1 rounded transition-colors"
-                    >
-                      <span>+</span> To-Doを追加
-                    </button>
-                  </div>
-
-                  <div className="flex justify-end gap-3 pt-4 border-t border-slate-200 mt-4">
-                    <button
-                      onClick={() => {
-                        setIsCreatingPolicy(false);
-                        setPolicyForm({ title: '', description: '', todos: [{ task: '', assignee: '', start_date: '', deadline: '', completed: false }] });
-                      }}
-                      className="text-sm px-4 py-2 text-slate-600 hover:bg-slate-200 rounded-lg transition-colors font-medium border border-transparent hover:border-slate-300"
-                    >
-                      キャンセル
-                    </button>
-                    <button
-                      onClick={handleCreatePolicy}
-                      disabled={!policyForm.title.trim() || isUpdating}
-                      className="text-sm px-5 py-2 bg-sage-600 hover:bg-sage-700 text-white rounded-lg transition-colors font-bold disabled:opacity-50 shadow-sm"
-                    >
-                      保存する
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
           </section>
         </div>
 
