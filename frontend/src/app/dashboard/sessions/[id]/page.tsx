@@ -726,7 +726,9 @@ function SessionDetailContent() {
           {/* 1. Meaning Map */}
           <section ref={mapSectionRef} className="glass-card p-4 h-[400px] md:h-[500px] relative">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-bold text-sage-dark pl-2 border-l-4 border-sage-primary">1. クラスタリング</h3>
+              <h3 className="text-sm font-bold text-sage-dark pl-2 border-l-4 border-sage-primary flex items-center gap-2">
+                <MapIcon className="h-4 w-4" /> 1. クラスタリング
+              </h3>
               {selectedIssueTopics.length > 0 && (
                 <button
                   onClick={() => setSelectedIssueTopics([])}
