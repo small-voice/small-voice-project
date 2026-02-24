@@ -204,14 +204,14 @@ export default function LandingPage() {
                             <CheckCircle2 className="w-5 h-5 text-sage-500 mt-0.5 shrink-0" />
                             <span>
                               <span className="font-bold text-sage-800 block mb-1">AIファシリテーター</span>
-                              各チャットの対話をAIが中立的なファシリテーターとして分析し、合意形成をサポートします。
+                              各チャットの対話をAIが中立的なファシリテーターとして分析し、合意形成をサポート。
                             </span>
                           </li>
                           <li className="flex items-start gap-3 text-sm text-slate-600">
                             <CheckCircle2 className="w-5 h-5 text-sage-500 mt-0.5 shrink-0" />
                             <span>
                               <span className="font-bold text-sage-800 block mb-1">政策リスト</span>
-                              対話から生まれたアイデアを、具体的なToDoとスケジュール付きの政策として立案、管理し、実行に移します。
+                              対話から生まれたアイデアを、具体的な政策として立案し、管理、実行。
                             </span>
                           </li>
                         </ul>
