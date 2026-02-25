@@ -37,6 +37,7 @@ function DashboardContent() {
 
   // 政策からのFBアンケート作成用パラメータ
   const surveyTitleParam = searchParams?.get('survey_title');
+  const surveyDescriptionParam = searchParams?.get('survey_description');
   const surveyQuestionParam = searchParams?.get('survey_question');
 
   // Sync activeTab with URL
@@ -212,6 +213,7 @@ function DashboardContent() {
             <SurveyManager
               user={user}
               initialTitle={surveyTitleParam || undefined}
+              initialDescription={surveyDescriptionParam || undefined}
               initialQuestions={surveyQuestionParam ? [{ text: surveyQuestionParam, is_required: true, order: 1 }] : undefined}
             />
           )}

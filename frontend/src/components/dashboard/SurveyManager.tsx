@@ -23,10 +23,11 @@ interface User {
 interface SurveyManagerProps {
   user?: User;
   initialTitle?: string;
+  initialDescription?: string;
   initialQuestions?: QuestionDraft[];
 }
 
-export default function SurveyManager({ user: propUser, initialTitle, initialQuestions }: SurveyManagerProps) {
+export default function SurveyManager({ user: propUser, initialTitle, initialDescription, initialQuestions }: SurveyManagerProps) {
   const [surveys, setSurveys] = useState<SurveySummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState<'list' | 'create' | 'edit'>('list');
@@ -51,10 +52,13 @@ export default function SurveyManager({ user: propUser, initialTitle, initialQue
       setTitle(initialTitle);
       setView('create');
     }
+    if (initialDescription !== undefined) {
+      setDescription(initialDescription);
+    }
     if (initialQuestions && initialQuestions.length > 0) {
       setQuestions(initialQuestions);
     }
-  }, [initialTitle, initialQuestions]);
+  }, [initialTitle, initialDescription, initialQuestions]);
 
   const fetchUser = async () => {
     try {

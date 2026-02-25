@@ -1413,8 +1413,9 @@ function SessionDetailContent() {
                                       onClick={(e) => {
                                         e.stopPropagation();
                                         const encodedTitle = encodeURIComponent(policy.title);
-                                        const encodedQuestion = encodeURIComponent('本政策についてのフィードバックのご意見をください');
-                                        router.push(`/dashboard?tab=surveys&survey_title=${encodedTitle}&survey_question=${encodedQuestion}`);
+                                        const encodedDescription = encodeURIComponent(`「${policy.title}」の実施結果について、あなたのご意見・評価をお聞かせください。いただいたフィードバックは、次の政策立案に活用させていただきます。`);
+                                        const encodedQuestion = encodeURIComponent(`「${policy.title}」の取り組みについて、実施状況の評価や改善点・ご意見をお聞かせください。`);
+                                        router.push(`/dashboard?tab=surveys&survey_title=${encodedTitle}&survey_description=${encodedDescription}&survey_question=${encodedQuestion}`);
                                       }}
                                       className="flex items-center gap-1 text-[10px] px-2 py-1.5 bg-sage-600 hover:bg-sage-700 text-white border border-sage-600 rounded font-bold transition-colors shadow-sm"
                                       title="FBアンケートを作成する"
