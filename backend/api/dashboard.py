@@ -11,7 +11,7 @@ import io
 import re
 from urllib.parse import quote
 
-from backend.database import SessionLocal, AnalysisSession, AnalysisResult, IssueDefinition, Survey, Comment, CommentLike, Answer, get_db, OrganizationMember, User, Policy
+from backend.database import SessionLocal, AnalysisSession, AnalysisResult, IssueDefinition, Survey, Comment, CommentLike, Answer, get_db, OrganizationMember, User, Policy, PolicyEvaluation
 from backend.api.auth import get_current_user, UserResponse
 from backend.services.notification_service import create_notification, notify_organization_members, notify_organization_admins
 
@@ -85,14 +85,21 @@ class CommentItem(BaseModel):
     likes_count: int
     parent_id: Optional[int]
 
+class PolicyEvaluationItem(BaseModel):
+    user_id: int
+    rating: int
+
 class PolicyItem(BaseModel):
     id: int
     issue_id: Optional[str]
     title: str
     description: str
     priority: str
+    target_group: str
+    status: str
     todos: Any
     created_at: datetime
+    evaluations: List[PolicyEvaluationItem] = []
 
 class SessionDetail(BaseModel):
     id: int
@@ -207,8 +214,11 @@ def get_session_detail(
                 title=p.title,
                 description=p.description,
                 priority=p.priority or "medium",
+                target_group=p.target_group or "全体",
+                status=p.status or "提案",
                 todos=p.todos,
-                created_at=p.created_at
+                created_at=p.created_at,
+                evaluations=[PolicyEvaluationItem(user_id=e.user_id, rating=e.rating) for e in p.evaluations]
             ) for p in session.policies
         ]
     )
@@ -314,6 +324,8 @@ class PolicyRequest(BaseModel):
     title: str
     description: str
     priority: str = "medium"
+    target_group: str = "全体"
+    status: str = "提案"
     todos: Any
 
 @router.post("/sessions/{session_id}/policies", response_model=PolicyItem)
@@ -339,6 +351,8 @@ def create_policy(
         title=payload.title,
         description=payload.description,
         priority=payload.priority,
+        target_group=payload.target_group,
+        status=payload.status,
         todos=payload.todos
     )
     db.add(new_policy)
@@ -351,8 +365,11 @@ def create_policy(
         title=new_policy.title,
         description=new_policy.description,
         priority=new_policy.priority,
+        target_group=new_policy.target_group,
+        status=new_policy.status,
         todos=new_policy.todos,
-        created_at=new_policy.created_at
+        created_at=new_policy.created_at,
+        evaluations=[]
     )
 
 @router.put("/policies/{policy_id}", response_model=PolicyItem)
@@ -380,6 +397,8 @@ def update_policy(
     policy.title = payload.title
     policy.description = payload.description
     policy.priority = payload.priority
+    policy.target_group = payload.target_group
+    policy.status = payload.status
     policy.todos = payload.todos
     
     db.commit()
@@ -391,9 +410,55 @@ def update_policy(
         title=policy.title,
         description=policy.description,
         priority=policy.priority,
+        target_group=policy.target_group,
+        status=policy.status,
         todos=policy.todos,
-        created_at=policy.created_at
+        created_at=policy.created_at,
+        evaluations=[PolicyEvaluationItem(user_id=e.user_id, rating=e.rating) for e in policy.evaluations]
     )
+
+class EvaluateRequest(BaseModel):
+    rating: int
+
+@router.post("/policies/{policy_id}/evaluate")
+def evaluate_policy(
+    policy_id: int,
+    payload: EvaluateRequest,
+    current_user: UserResponse = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    policy = db.query(Policy).filter(Policy.id == policy_id).first()
+    if not policy:
+        raise HTTPException(status_code=404, detail="Policy not found")
+        
+    session = db.query(AnalysisSession).filter(
+        AnalysisSession.id == policy.session_id,
+        AnalysisSession.organization_id == current_user.current_org_id
+    ).first()
+    if not session:
+        raise HTTPException(status_code=404, detail="Permission denied")
+        
+    # Validate rating
+    if payload.rating < 1 or payload.rating > 5:
+        raise HTTPException(status_code=400, detail="Rating must be between 1 and 5")
+        
+    evaluation = db.query(PolicyEvaluation).filter(
+        PolicyEvaluation.policy_id == policy_id,
+        PolicyEvaluation.user_id == current_user.id
+    ).first()
+    
+    if evaluation:
+        evaluation.rating = payload.rating
+    else:
+        evaluation = PolicyEvaluation(
+            policy_id=policy_id,
+            user_id=current_user.id,
+            rating=payload.rating
+        )
+        db.add(evaluation)
+        
+    db.commit()
+    return {"message": "Success"}
 
 @router.delete("/policies/{policy_id}")
 def delete_policy(

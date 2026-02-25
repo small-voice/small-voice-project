@@ -216,11 +216,26 @@ class Policy(Base):
     title = Column(String) # 政策名
     description = Column(Text) # 説明
     priority = Column(String, default="medium") # 優先順位: high, medium, low
-    todos = Column(JSON) # 実現までのtodo: [{"task": "...", "assignee": "...", "deadline": "...", "completed": false}]
+    target_group = Column(String, default="全体") # どのグループの政策か
+    status = Column(String, default="提案") # ステータス: 提案, 可決, 実行中, 完了
+    todos = Column(JSON) # 実現までのtodo: [{"task": "...", "assignee": "...", "deadline": "...", "status": "未着手"}]
     created_at = Column(DateTime, default=now_jst)
     updated_at = Column(DateTime, default=now_jst, onupdate=now_jst)
     
     session = relationship("AnalysisSession", back_populates="policies")
+    evaluations = relationship("PolicyEvaluation", back_populates="policy", cascade="all, delete-orphan")
+
+class PolicyEvaluation(Base):
+    """政策への評価"""
+    __tablename__ = "policy_evaluations"
+    id = Column(Integer, primary_key=True, index=True)
+    policy_id = Column(Integer, ForeignKey("policies.id"))
+    user_id = Column(Integer, ForeignKey("users.id"))
+    rating = Column(Integer) # 1 to 5
+    created_at = Column(DateTime, default=now_jst)
+    
+    policy = relationship("Policy", back_populates="evaluations")
+    user = relationship("User")
 
 class Comment(Base):
     __tablename__ = "comments"

@@ -44,6 +44,31 @@ const COLOR_PALETTE = [
   '#E57373', // Red Light
 ];
 
+const POLICY_STATUSES = ["提案", "可決", "実行中", "完了"];
+
+// グループカラーパレット（グループ番号に対応）
+const GROUP_COLORS = [
+  { bg: 'bg-violet-100', text: 'text-violet-700', border: 'border-violet-300', selectBg: '#f5f3ff' },
+  { bg: 'bg-sky-100', text: 'text-sky-700', border: 'border-sky-300', selectBg: '#f0f9ff' },
+  { bg: 'bg-amber-100', text: 'text-amber-700', border: 'border-amber-300', selectBg: '#fffbeb' },
+  { bg: 'bg-rose-100', text: 'text-rose-700', border: 'border-rose-300', selectBg: '#fff1f2' },
+  { bg: 'bg-teal-100', text: 'text-teal-700', border: 'border-teal-300', selectBg: '#f0fdfa' },
+  { bg: 'bg-orange-100', text: 'text-orange-700', border: 'border-orange-300', selectBg: '#fff7ed' },
+];
+
+const STATUS_COLORS: Record<string, { bg: string; text: string; border: string }> = {
+  '提案': { bg: 'bg-slate-100', text: 'text-slate-600', border: 'border-slate-300' },
+  '可決': { bg: 'bg-sage-100', text: 'text-sage-700', border: 'border-sage-300' },
+  '実行中': { bg: 'bg-blue-100', text: 'text-blue-700', border: 'border-blue-300' },
+  '完了': { bg: 'bg-green-100', text: 'text-green-700', border: 'border-green-300' },
+};
+
+const TODO_STATUS_COLORS: Record<string, { bg: string; text: string }> = {
+  '未着手': { bg: 'bg-slate-100', text: 'text-slate-600' },
+  '進行中': { bg: 'bg-blue-100', text: 'text-blue-700' },
+  '完了': { bg: 'bg-green-100', text: 'text-green-700' },
+};
+
 // Helper to wrap text for Plotly tooltips
 const wrapText = (text: string, maxLen: number = 30) => {
   if (!text) return '';
@@ -351,12 +376,16 @@ function SessionDetailContent() {
     title: string;
     description: string;
     priority: string;
+    target_group: string;
+    status: string;
     todos: any[];
   }>({
     title: '',
     description: '',
     priority: 'medium',
-    todos: [{ task: '', assignee: '', start_date: '', deadline: '', completed: false }]
+    target_group: '全体',
+    status: '提案',
+    todos: [{ task: '', assignee: '', start_date: '', deadline: '', status: '未着手', completed: false }]
   });
 
   // Edit Policy State
@@ -382,7 +411,9 @@ function SessionDetailContent() {
       title: policy.title,
       description: policy.description || '',
       priority: policy.priority || 'medium',
-      todos: parseTodos(policy.todos)
+      target_group: policy.target_group || '全体',
+      status: policy.status || '提案',
+      todos: parseTodos(policy.todos).map(t => ({ ...t, status: t.status || '未着手' }))
     });
     if (!expandedPolicyIds.includes(policy.id)) {
       setExpandedPolicyIds(prev => [...prev, policy.id]);
@@ -403,6 +434,8 @@ function SessionDetailContent() {
         title: editPolicyForm.title,
         description: editPolicyForm.description,
         priority: editPolicyForm.priority,
+        target_group: editPolicyForm.target_group,
+        status: editPolicyForm.status,
         todos: editPolicyForm.todos
       }, { withCredentials: true });
 
@@ -420,7 +453,7 @@ function SessionDetailContent() {
 
   const handleEditAddTodo = () => {
     if (!editPolicyForm) return;
-    setEditPolicyForm({ ...editPolicyForm, todos: [...editPolicyForm.todos, { task: '', assignee: '', start_date: '', deadline: '', completed: false }] });
+    setEditPolicyForm({ ...editPolicyForm, todos: [...editPolicyForm.todos, { task: '', assignee: '', start_date: '', deadline: '', status: '未着手', completed: false }] });
   };
 
   const handleEditTodoChange = (index: number, field: string, value: any) => {
@@ -446,7 +479,7 @@ function SessionDetailContent() {
   const handleAddTodo = () => {
     setPolicyForm(prev => ({
       ...prev,
-      todos: [...prev.todos, { task: '', assignee: '', start_date: '', deadline: '', completed: false }]
+      todos: [...prev.todos, { task: '', assignee: '', start_date: '', deadline: '', status: '未着手', completed: false }]
     }));
   };
 
@@ -472,6 +505,8 @@ function SessionDetailContent() {
         title: policy.title,
         description: policy.description,
         priority: policy.priority || 'medium',
+        target_group: policy.target_group || '全体',
+        status: policy.status || '提案',
         todos: newTodos
       }, { withCredentials: true });
 
@@ -534,10 +569,12 @@ function SessionDetailContent() {
         title: policyForm.title,
         description: policyForm.description,
         priority: policyForm.priority,
+        target_group: policyForm.target_group,
+        status: policyForm.status,
         todos: policyForm.todos,
       }, { withCredentials: true });
 
-      setPolicyForm({ title: '', description: '', priority: 'medium', todos: [{ task: '', assignee: '', start_date: '', deadline: '', completed: false }] });
+      setPolicyForm({ title: '', description: '', priority: 'medium', target_group: '全体', status: '提案', todos: [{ task: '', assignee: '', start_date: '', deadline: '', status: '未着手', completed: false }] });
       setIsCreatingPolicy(false);
 
       const res = await axios.get(`/api/dashboard/sessions/${id}`, { withCredentials: true });
@@ -564,7 +601,18 @@ function SessionDetailContent() {
   };
 
 
-
+  const handleEvaluatePolicy = async (policyId: number, rating: number) => {
+    setIsUpdating(true);
+    try {
+      await axios.post(`/api/dashboard/policies/${policyId}/evaluate`, { rating }, { withCredentials: true });
+      const res = await axios.get(`/api/dashboard/sessions/${id}`, { withCredentials: true });
+      setData(res.data);
+    } catch (e) {
+      alert("評価に失敗しました");
+    } finally {
+      setIsUpdating(false);
+    }
+  };
   const handleIssueClick = (issue: any, index: number) => {
     // 1. Toggle Expansion and Active State
     const isClearing = expandedIssueIndex === index;
@@ -710,6 +758,15 @@ function SessionDetailContent() {
 
   // Current analysis result
   const currentAnalysis = activeThreadRootId && threadAnalysisResults[activeThreadRootId.toString()];
+
+  // ディスカッショングループ一覧（動的）- Hooks must be called before any conditional returns
+  const discussionGroupOptions = useMemo(() => {
+    const groups = availableGroups.map((g, idx) => ({
+      name: g.content.split('\n')[0].replace('System Root for ', '') || `グループ ${idx + 1}`,
+      index: idx,
+    }));
+    return [{ name: '全体', index: -1 }, ...groups];
+  }, [availableGroups]);
 
   if (loading) {
     return (
@@ -1140,6 +1197,45 @@ function SessionDetailContent() {
                         </select>
                       </div>
                     </div>
+                    <div className="flex gap-4">
+                      <div className="flex-1">
+                        <label className="block text-xs font-bold text-slate-600 mb-1">対象グループ (ディスカッション)</label>
+                        {(() => {
+                          const sel = discussionGroupOptions.find(g => g.name === policyForm.target_group);
+                          const gc = sel && sel.index >= 0 ? GROUP_COLORS[sel.index % GROUP_COLORS.length] : null;
+                          return (
+                            <select
+                              value={policyForm.target_group}
+                              onChange={e => setPolicyForm({ ...policyForm, target_group: e.target.value })}
+                              style={gc ? { backgroundColor: gc.selectBg } : {}}
+                              className={`w-full text-sm p-3 rounded-lg border focus:outline-none focus:ring-2 focus:ring-sage-500/50 transition-all font-bold ${gc ? `${gc.text} ${gc.border}` : 'text-slate-600 border-slate-200 bg-white'
+                                }`}
+                            >
+                              {discussionGroupOptions.map(g => (
+                                <option key={g.name} value={g.name}>{g.name}</option>
+                              ))}
+                            </select>
+                          );
+                        })()}
+                      </div>
+                      <div className="flex-1">
+                        <label className="block text-xs font-bold text-slate-600 mb-1">ステータス</label>
+                        {(() => {
+                          const sc = STATUS_COLORS[policyForm.status] || STATUS_COLORS['提案'];
+                          return (
+                            <select
+                              value={policyForm.status}
+                              onChange={e => setPolicyForm({ ...policyForm, status: e.target.value })}
+                              className={`w-full text-sm p-3 rounded-lg border focus:outline-none focus:ring-2 focus:ring-sage-500/50 transition-all font-bold ${sc.bg} ${sc.text} ${sc.border}`}
+                            >
+                              {POLICY_STATUSES.map(s => (
+                                <option key={s} value={s}>{s}</option>
+                              ))}
+                            </select>
+                          );
+                        })()}
+                      </div>
+                    </div>
                     <div>
                       <label className="block text-xs font-bold text-slate-600 mb-1">説明 (背景や目的)</label>
                       <textarea
@@ -1169,6 +1265,15 @@ function SessionDetailContent() {
                               className="w-full text-xs p-2 rounded border border-slate-200 focus:border-sage-400 focus:ring-1 focus:ring-sage-400 outline-none"
                             />
                             <div className="flex gap-2">
+                              <select
+                                value={todo.status || '未着手'}
+                                onChange={e => handleTodoChange(idx, 'status', e.target.value)}
+                                className={`w-24 text-xs p-2 rounded border border-slate-200 focus:border-sage-400 outline-none font-bold ${todo.status === '完了' ? 'bg-green-100 text-green-700 border-green-200' : todo.status === '進行中' ? 'bg-blue-100 text-blue-700 border-blue-200' : 'bg-slate-100 text-slate-600'}`}
+                              >
+                                <option value="未着手">未着手</option>
+                                <option value="進行中">進行中</option>
+                                <option value="完了">完了</option>
+                              </select>
                               <div className="flex-1 relative">
                                 <UserIcon className="w-3.5 h-3.5 absolute left-2 top-2 text-slate-400" />
                                 <select
@@ -1221,7 +1326,7 @@ function SessionDetailContent() {
                     <button
                       onClick={() => {
                         setIsCreatingPolicy(false);
-                        setPolicyForm({ title: '', description: '', priority: 'medium', todos: [{ task: '', assignee: '', start_date: '', deadline: '', completed: false }] });
+                        setPolicyForm({ title: '', description: '', priority: 'medium', target_group: '全体', status: '提案', todos: [{ task: '', assignee: '', start_date: '', deadline: '', status: '未着手', completed: false }] });
                       }}
                       className="text-sm px-4 py-2 text-slate-600 hover:bg-slate-200 rounded-lg transition-colors font-medium border border-transparent hover:border-slate-300"
                     >
@@ -1276,6 +1381,23 @@ function SessionDetailContent() {
                               }`}>
                               {policy.priority === 'high' ? '高' : policy.priority === 'low' ? '低' : '中'}
                             </span>
+                            {(() => {
+                              const sel = discussionGroupOptions.find(g => g.name === (policy.target_group || '全体'));
+                              const gc = sel && sel.index >= 0 ? GROUP_COLORS[sel.index % GROUP_COLORS.length] : null;
+                              return (
+                                <span className={`ml-2 px-2 py-0.5 rounded text-[10px] font-bold border text-center inline-block ${gc ? `${gc.bg} ${gc.text} ${gc.border}` : 'bg-slate-100 text-slate-600 border-slate-300'}`}>
+                                  {policy.target_group || '全体'}
+                                </span>
+                              );
+                            })()}
+                            {(() => {
+                              const sc = STATUS_COLORS[policy.status || '提案'] || STATUS_COLORS['提案'];
+                              return (
+                                <span className={`ml-1 px-2 py-0.5 rounded text-[10px] font-bold border text-center inline-block ${sc.bg} ${sc.text} ${sc.border}`}>
+                                  {policy.status || '提案'}
+                                </span>
+                              );
+                            })()}
                           </h5>
                           {/* Buttons moved to body */}
                         </div>
@@ -1333,15 +1455,18 @@ function SessionDetailContent() {
                               {parsedTodos.length > 0 ? (
                                 <div className="space-y-2">
                                   {parsedTodos.map((todo: any, idx: number) => (
-                                    <div key={idx} className={`flex items-start gap-3 p-3 rounded-md border text-xs transition-colors ${todo.completed ? 'bg-slate-50 border-slate-100 opacity-60' : 'bg-white border-slate-200 shadow-sm'}`}>
+                                    <div key={idx} className={`flex items-start gap-3 p-3 rounded-md border text-xs transition-colors ${todo.status === '完了' || todo.completed ? 'bg-slate-50 border-slate-100 opacity-60' : 'bg-white border-slate-200 shadow-sm'}`}>
                                       <button
                                         onClick={() => handleToggleTodo(policy, idx)}
-                                        className={`mt-0.5 shrink-0 w-4 h-4 rounded-sm border flex items-center justify-center transition-colors ${todo.completed ? 'bg-sage-500 border-sage-500 text-white' : 'border-slate-300 hover:border-sage-400 bg-white'}`}
+                                        className={`mt-0.5 shrink-0 w-4 h-4 rounded-sm border flex items-center justify-center transition-colors ${todo.status === '完了' || todo.completed ? 'bg-sage-500 border-sage-500 text-white' : 'border-slate-300 hover:border-sage-400 bg-white'}`}
                                       >
-                                        {todo.completed && <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
+                                        {(todo.status === '完了' || todo.completed) && <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
                                       </button>
                                       <div className="flex-1 min-w-0">
-                                        <p className={`font-medium text-sm leading-tight ${todo.completed ? 'line-through text-slate-400' : 'text-slate-800'}`}>{todo.task}</p>
+                                        <div className="flex items-center gap-2 mb-1">
+                                          <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${todo.status === '完了' ? 'bg-green-100 text-green-700' : todo.status === '進行中' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-600'}`}>{todo.status || '未着手'}</span>
+                                          <p className={`font-medium text-sm leading-tight ${todo.status === '完了' || todo.completed ? 'line-through text-slate-400' : 'text-slate-800'}`}>{todo.task}</p>
+                                        </div>
                                         {(todo.assignee || todo.start_date || todo.deadline) && (
                                           <div className="flex flex-wrap gap-x-4 gap-y-2 mt-2 text-[11px] text-slate-500">
                                             {todo.assignee && <span className="flex items-center gap-1 bg-slate-100 px-1.5 py-0.5 rounded text-slate-600"><UserIcon className="w-3 h-3" /> {todo.assignee === '担当者未定' ? <span className="italic text-slate-400">未定</span> : todo.assignee}</span>}
@@ -1360,6 +1485,40 @@ function SessionDetailContent() {
                               ) : (
                                 <p className="text-xs text-slate-400 p-2 bg-slate-50 rounded border border-slate-100">タスクは登録されていません</p>
                               )}
+                            </div>
+
+                            {/* Policy Evaluations */}
+                            <div className="mt-4 p-3 bg-slate-50 rounded-md border border-slate-100 flex items-center justify-between">
+                              <div className="flex-1">
+                                <p className="text-xs font-bold text-slate-600 mb-1">この政策を評価する</p>
+                                <p className="text-[10px] text-slate-400">賛同度や期待度を5段階で評価してください</p>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                {(() => {
+                                  const evaluations = policy.evaluations || [];
+                                  const average = evaluations.length > 0 ? (evaluations.reduce((a: any, b: any) => a + b.rating, 0) / evaluations.length).toFixed(1) : 0;
+                                  const myEval = user && evaluations.find((e: any) => e.user_id === user.id);
+
+                                  return (
+                                    <>
+                                      {Array.from({ length: 5 }).map((_, i) => (
+                                        <button
+                                          key={i}
+                                          disabled={isUpdating}
+                                          onClick={(e) => { e.stopPropagation(); handleEvaluatePolicy(policy.id, i + 1); }}
+                                          className={`text-lg p-0.5 transition-colors focus:outline-none ${myEval && myEval.rating >= i + 1 ? 'text-yellow-400' : 'text-slate-300 hover:text-yellow-300'}`}
+                                        >
+                                          ★
+                                        </button>
+                                      ))}
+                                      <div className="ml-3 flex items-center gap-1.5">
+                                        <span className="text-xs font-bold text-slate-700">{average}</span>
+                                        <span className="text-[10px] text-slate-400">({evaluations.length}件)</span>
+                                      </div>
+                                    </>
+                                  );
+                                })()}
+                              </div>
                             </div>
 
                             {/* Monthly Gantt Chart */}
@@ -1488,6 +1647,45 @@ function SessionDetailContent() {
                                   </select>
                                 </div>
                               </div>
+                              <div className="flex gap-4 mb-4">
+                                <div className="flex-1">
+                                  <label className="block text-[11px] font-bold text-slate-600 mb-1">対象グループ (ディスカッション)</label>
+                                  {(() => {
+                                    const sel = discussionGroupOptions.find(g => g.name === editPolicyForm.target_group);
+                                    const gc = sel && sel.index >= 0 ? GROUP_COLORS[sel.index % GROUP_COLORS.length] : null;
+                                    return (
+                                      <select
+                                        value={editPolicyForm.target_group}
+                                        onChange={e => setEditPolicyForm({ ...editPolicyForm, target_group: e.target.value })}
+                                        style={gc ? { backgroundColor: gc.selectBg } : {}}
+                                        className={`w-full text-sm p-2 rounded border focus:outline-none focus:ring-2 focus:ring-sage-500/50 font-bold ${gc ? `${gc.text} ${gc.border}` : 'text-slate-600 border-slate-300 bg-white'
+                                          }`}
+                                      >
+                                        {discussionGroupOptions.map(g => (
+                                          <option key={g.name} value={g.name}>{g.name}</option>
+                                        ))}
+                                      </select>
+                                    );
+                                  })()}
+                                </div>
+                                <div className="flex-1">
+                                  <label className="block text-[11px] font-bold text-slate-600 mb-1">ステータス</label>
+                                  {(() => {
+                                    const sc = STATUS_COLORS[editPolicyForm.status] || STATUS_COLORS['提案'];
+                                    return (
+                                      <select
+                                        value={editPolicyForm.status}
+                                        onChange={e => setEditPolicyForm({ ...editPolicyForm, status: e.target.value })}
+                                        className={`w-full text-sm p-2 rounded border focus:outline-none focus:ring-2 focus:ring-sage-500/50 font-bold ${sc.bg} ${sc.text} ${sc.border}`}
+                                      >
+                                        {POLICY_STATUSES.map(s => (
+                                          <option key={s} value={s}>{s}</option>
+                                        ))}
+                                      </select>
+                                    );
+                                  })()}
+                                </div>
+                              </div>
                               <div>
                                 <label className="block text-[11px] font-bold text-slate-600 mb-1">説明</label>
                                 <textarea value={editPolicyForm.description} onChange={e => setEditPolicyForm({ ...editPolicyForm, description: e.target.value })} className="w-full text-sm p-2 rounded border border-slate-300 focus:outline-none focus:ring-2 focus:ring-sage-500/50 min-h-[60px]" />
@@ -1502,11 +1700,18 @@ function SessionDetailContent() {
                                       </button>
 
                                       <div className="pt-1.5 pl-1 pr-2">
-                                        <input type="checkbox" checked={todo.completed} onChange={() => handleEditToggleTodo(idx)} className="w-4 h-4 text-sage-600 rounded focus:ring-sage-500 border-slate-300" title="完了マーク" />
+                                        <input type="checkbox" checked={todo.status === '完了' || todo.completed} onChange={() => handleEditToggleTodo(idx)} className="w-4 h-4 text-sage-600 rounded focus:ring-sage-500 border-slate-300" title="完了マーク" />
                                       </div>
 
                                       <div className="flex-1 flex flex-col gap-2">
-                                        <input type="text" value={todo.task} onChange={e => handleEditTodoChange(idx, 'task', e.target.value)} placeholder="タスク内容" className="w-full text-xs p-2 rounded border border-slate-200 focus:border-sage-400 focus:ring-1 focus:ring-sage-400 outline-none" />
+                                        <div className="flex gap-2 w-full">
+                                          <select value={todo.status || '未着手'} onChange={e => handleEditTodoChange(idx, 'status', e.target.value)} className="w-24 text-[11px] p-2 rounded border border-slate-200 focus:border-sage-400 outline-none">
+                                            <option value="未着手">未着手</option>
+                                            <option value="進行中">進行中</option>
+                                            <option value="完了">完了</option>
+                                          </select>
+                                          <input type="text" value={todo.task} onChange={e => handleEditTodoChange(idx, 'task', e.target.value)} placeholder="タスク内容" className="flex-1 text-xs p-2 rounded border border-slate-200 focus:border-sage-400 focus:ring-1 focus:ring-sage-400 outline-none" />
+                                        </div>
                                         <div className="flex flex-col md:flex-row gap-2">
                                           <div className="flex-1 relative">
                                             <UserIcon className="w-3.5 h-3.5 absolute left-2 top-2.5 text-slate-400" />

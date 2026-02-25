@@ -37,6 +37,8 @@
 | **analysis_sessions** | issue_definitions | 1:N | 課題レポート |
 | **analysis_sessions** | policies | 1:N | 政策リスト |
 | **analysis_sessions** | comments | 1:N | ディスカッション |
+| **policies** | policy_evaluations | 1:N | 政策への評価 |
+| **users** | policy_evaluations | 1:N | ユーザーによる政策評価 |
 | **comments** | comment_likes | 1:N | いいね |
 | **comments** | comments | 1:N | 返信（自己参照・階層構造） |
 | **casual_posts** | casual_post_likes | 1:N | いいね |
@@ -149,9 +151,22 @@ AI分析の実行単位（セッション）を管理します。
 | `title` | String | 政策名。 |
 | `description` | Text | 政策の説明。 |
 | `priority` | String | 優先順位。`'high'`（高）/ `'medium'`（中）/ `'low'`（低）のいずれか。デフォルト: `'medium'`。 |
-| `todos` | JSON | 実現までのToDoリスト。`[{"task": "...", "assignee": "...", "start_date": "...", "deadline": "...", "completed": false}]` |
+| `target_group` | String | 対象のディスカッショングループ名。デフォルト: `'全体'`。 |
+| `status` | String | 政策のステータス。`'提案'` / `'可決'` / `'実行中'` / `'完了'` のいずれか。デフォルト: `'提案'`。 |
+| `todos` | JSON | 実現までのToDoリスト。`[{"task": "...", "assignee": "...", "start_date": "...", "deadline": "...", "status": "未着手", "completed": false}]` |
 | `created_at` | DateTime | 作成日時。 |
 | `updated_at` | DateTime | 最終更新日時。 |
+
+### 政策評価 (`policy_evaluations`)
+各ユーザーが政策に対して付けた賛同度・期待度の評価を管理します。1ユーザーにつき1政策1レコード（更新可能）。
+
+| カラム名 | 型 | 説明 |
+| :--- | :--- | :--- |
+| `id` | Integer | ID (主キー)。 |
+| `policy_id` | Integer | 紐付く政策ID (外部キー)。 |
+| `user_id` | Integer | 評価したユーザーID (外部キー)。 |
+| `rating` | Integer | 評価値。1〜5の整数。 |
+| `created_at` | DateTime | 作成日時。 |
 
 ### コメント/チャット (`comments`)
 分析レポートに対するユーザーからのフィードバックや議論を格納します。

@@ -29,8 +29,11 @@ export interface PolicyItem {
   title: string;
   description: string;
   priority: string;
+  target_group: string;
+  status: string;
   todos: any; // Can be a string or parsed JSON object depending on how it's sent
   created_at: string;
+  evaluations?: any[];
 }
 
 export interface SessionDetail {
