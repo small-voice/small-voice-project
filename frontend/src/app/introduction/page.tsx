@@ -211,7 +211,7 @@ export default function LandingPage() {
                             <CheckCircle2 className="w-5 h-5 text-sage-500 mt-0.5 shrink-0" />
                             <span>
                               <span className="font-bold text-sage-800 block mb-1">政策リスト</span>
-                              対話から生まれたアイデアを、具体的な政策として立案・管理し、実行に移します。政策には<strong>「対象グループ」</strong>（ディスカッショングループから選択）と<strong>「ステータス」</strong>（提案 → 可決 → 実行中 → 完了）を設定でき、各タスクにも進捗ステータスを管理できます。さらに、メンバーが政策に対して<strong>5段階の評価</strong>をつける賛同度・期待度評価機能も搭載しています。
+                              対話から生まれたアイデアを、具体的な政策として立案し、管理、実行に移します。
                             </span>
                           </li>
                           <li className="flex items-start gap-3 text-sm text-slate-600">
