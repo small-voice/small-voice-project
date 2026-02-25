@@ -196,8 +196,8 @@ export default function LandingPage() {
                           <li className="flex items-start gap-3 text-sm text-slate-600">
                             <CheckCircle2 className="w-5 h-5 text-sage-500 mt-0.5 shrink-0" />
                             <span>
-                              <span className="font-bold text-sage-800 block mb-1">課題ごとの議論チャット</span>
-                              各課題に専用のチャット空間を生成し、具体的な対話を促進。
+                              <span className="font-bold text-sage-800 block mb-1">グループごとの議論チャット</span>
+                              メンバーをランダムに各グループに割り当て、各グループごとに専用のチャット空間を生成し、各課題に応じた議論を行う。
                             </span>
                           </li>
                           <li className="flex items-start gap-3 text-sm text-slate-600">

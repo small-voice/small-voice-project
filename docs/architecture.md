@@ -36,7 +36,7 @@
      - [4.1 実装](#41-実装)
      - [4.2 プロンプトエンジニアリング](#42-プロンプトエンジニアリング)
      - [4.3 データモデル](#43-データモデル)
-   - [5. 課題ごとの議論チャット](#5-課題ごとの議論チャット)
+   - [5. グループごとの議論チャット](#5-グループごとの議論チャット)
    - [6. AIファシリテーター](#6-aiファシリテーター)
      - [6.1 実装](#61-実装)
      - [6.2 プロンプト設計](#62-プロンプト設計)
@@ -256,7 +256,7 @@
 
 #### 4.1 実装
 - **関数**: `backend/services/analysis.py::generate_issue_logic_from_clusters()`
-- **API**: `GET /api/dashboard/sessions/{session_id}/issues` - 課題一覧取得
+- **API**: `GET /api/dashboard/sessions/{session_id}/groups` - グループ一覧取得
 - **処理フロー**:
   1. 通常クラスタとSmall Voiceクラスタを分離
   2. Gemini 2.0 Flash Thinking API に以下を依頼:
@@ -273,8 +273,8 @@
 #### 4.3 データモデル
 - **IssueDefinition**: 課題タイトル、関連トピック、洞察、ソースタイプ (`majority` | `small_voice`) をJSON形式で保持
 
-### 5. 課題ごとの議論チャット
-各課題に対して、メンバーが意見を投稿し、議論を深める空間を提供します。
+### 5. グループごとの議論チャット
+メンバーをランダムに各グループに割り当て、各グループごとに専用のチャット空間を生成し、各課題に応じた議論を行う
 
 - **API**: `backend/api/dashboard.py`
   - `POST /api/dashboard/sessions/{session_id}/comments` - コメント投稿
@@ -743,8 +743,8 @@ small-voice-project/
     - `PUT /api/dashboard/sessions/{session_id}/publish-analysis` - AI分析（ファシリテーター）公開/非公開切り替え
   - **フォーム管理**:
     - `GET /api/dashboard/surveys` - フォーム一覧（状態フィルタ: 申請中/承認済み/却下/公開中）
-  - **課題生成・取得**:
-    - `GET /api/dashboard/sessions/{session_id}/issues` - 課題一覧取得
+  - **課題グループ・一覧の取得**:
+    - `GET /api/dashboard/sessions/{session_id}/groups` - 課題グループ（旧：課題リスト）抽出・一覧の取得
   - **コメント・議論**:
     - `POST /api/dashboard/sessions/{session_id}/comments` - コメント投稿
     - `PUT /api/dashboard/comments/{comment_id}` - コメント編集
