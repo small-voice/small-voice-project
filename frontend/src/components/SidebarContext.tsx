@@ -7,12 +7,15 @@ interface SidebarContextType {
   setIsMobileOpen: (open: boolean) => void;
   toggleMobileMenu: () => void;
   closeMobileMenu: () => void;
+  isSidebarHidden: boolean;
+  setIsSidebarHidden: (hidden: boolean) => void;
 }
 
 const SidebarContext = createContext<SidebarContextType | undefined>(undefined);
 
 export function SidebarProvider({ children }: { children: ReactNode }) {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const [isSidebarHidden, setIsSidebarHidden] = useState(false);
 
   const toggleMobileMenu = () => setIsMobileOpen(prev => !prev);
   const closeMobileMenu = () => setIsMobileOpen(false);
@@ -23,7 +26,9 @@ export function SidebarProvider({ children }: { children: ReactNode }) {
         isMobileOpen,
         setIsMobileOpen,
         toggleMobileMenu,
-        closeMobileMenu
+        closeMobileMenu,
+        isSidebarHidden,
+        setIsSidebarHidden
       }}
     >
       {children}

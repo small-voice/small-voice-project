@@ -15,8 +15,8 @@ export default function CsvImportPage() {
   const [sessions, setSessions] = useState<SessionSummary[]>([]);
   const [selectedSessionId, setSelectedSessionId] = useState<number | null>(null);
 
-  const [issues, setIssues] = useState<{ id: string, title: string }[]>([]);
-  const [selectedIssue, setSelectedIssue] = useState<{ id: string, title: string } | null>(null);
+  const [groups, setGroups] = useState<{ id: string, title: string }[]>([]);
+  const [selectedGroup, setSelectedGroup] = useState<{ id: string, title: string } | null>(null);
 
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
@@ -43,23 +43,23 @@ export default function CsvImportPage() {
     init();
   }, []);
 
-  // 2. Load Issues when Session changes
+  // 2. Load Groups when Session changes
   useEffect(() => {
     if (!selectedSessionId) {
-      setIssues([]);
-      setSelectedIssue(null);
+      setGroups([]);
+      setSelectedGroup(null);
       return;
     }
 
-    const fetchIssues = async () => {
+    const fetchGroups = async () => {
       try {
-        const res = await axios.get(`/api/dashboard/sessions/${selectedSessionId}/issues`);
-        setIssues(res.data);
+        const res = await axios.get(`/api/dashboard/sessions/${selectedSessionId}/groups`);
+        setGroups(res.data);
       } catch (e) {
         console.error(e);
       }
     };
-    fetchIssues();
+    fetchGroups();
   }, [selectedSessionId]);
 
   const handleDownloadTemplate = () => {
@@ -75,15 +75,14 @@ export default function CsvImportPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedSessionId || !selectedIssue || !file) return;
+    if (!selectedSessionId || !selectedGroup || !file) return;
 
     setLoading(true);
     setMessage(null);
 
     const formData = new FormData();
-    formData.append('issue_title', selectedIssue.title);
-    if (selectedIssue.id) {
-      formData.append('issue_id', selectedIssue.id);
+    if (selectedGroup.id) {
+      formData.append('group_id', selectedGroup.id);
     }
     formData.append('file', file);
 
@@ -141,30 +140,30 @@ export default function CsvImportPage() {
             </select>
           </div>
 
-          {/* Issue Selection */}
+          {/* Group Selection */}
           <div>
             <label className="block text-sm font-bold text-slate-700 mb-2">
-              ステップ2: 課題(Issue)を選択
+              ステップ2: グループを選択
             </label>
             <select
               className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#5C7066] focus:border-transparent"
-              value={selectedIssue?.id || selectedIssue?.title || ''}
+              value={selectedGroup?.id || selectedGroup?.title || ''}
               onChange={(e) => {
                 const val = e.target.value;
-                const found = issues.find(iss => (iss.id || iss.title) === val);
-                setSelectedIssue(found || null);
+                const found = groups.find(g => (g.id || g.title) === val);
+                setSelectedGroup(found || null);
               }}
               disabled={!selectedSessionId}
               required
             >
-              <option value="">課題を選択してください</option>
-              {issues.map((iss, i) => (
-                <option key={i} value={iss.id || iss.title}>{iss.title}</option>
+              <option value="">グループを選択してください</option>
+              {groups.map((g, i) => (
+                <option key={i} value={g.id || g.title}>{g.title}</option>
               ))}
             </select>
-            {selectedSessionId && issues.length === 0 && (
+            {selectedSessionId && groups.length === 0 && (
               <p className="text-xs text-amber-600 mt-1">
-                ※ このセッションには課題が定義されていないか、読み込めませんでした。
+                ※ このセッションにはグループが定義されていないか、読み込めませんでした。
               </p>
             )}
           </div>
@@ -203,9 +202,9 @@ export default function CsvImportPage() {
           {/* Submit Button */}
           <button
             type="submit"
-            disabled={loading || !selectedSessionId || !selectedIssue || !file}
+            disabled={loading || !selectedSessionId || !selectedGroup || !file}
             className={`w-full py-3 px-4 rounded-lg font-bold text-white shadow-md transition-all
-              ${loading || !selectedSessionId || !selectedIssue || !file
+              ${loading || !selectedSessionId || !selectedGroup || !file
                 ? 'bg-slate-300 cursor-not-allowed'
                 : 'bg-[#5C7066] hover:bg-[#4A5D54] hover:shadow-lg'
               }

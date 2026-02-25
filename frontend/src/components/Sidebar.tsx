@@ -19,9 +19,10 @@ interface SidebarProps {
   isMobileOpen: boolean;
   setIsMobileOpen: (isOpen: boolean) => void;
   onMobileClose: () => void;
+  isSidebarHidden?: boolean;
 }
 
-export default function Sidebar({ user, onLogout, isMobileOpen, setIsMobileOpen, onMobileClose }: SidebarProps) {
+export default function Sidebar({ user, onLogout, isMobileOpen, setIsMobileOpen, onMobileClose, isSidebarHidden }: SidebarProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   // State
@@ -247,10 +248,12 @@ export default function Sidebar({ user, onLogout, isMobileOpen, setIsMobileOpen,
     </aside>
   );
 
-  // --- Desktop Sidebar Implementation (Restored Design) ---
   const DesktopSidebar = (
-    <aside className="hidden md:flex w-64 h-dvh flex-col bg-gray-50 border-r border-gray-200 sticky top-0 overflow-y-auto shrink-0 z-30">
-      <div className="p-6">
+    <aside className={`
+      hidden md:flex flex-col bg-gray-50 border-r border-gray-200 sticky top-0 overflow-y-auto shrink-0 z-30 transition-all duration-[50ms] ease-in-out
+      ${isSidebarHidden ? 'w-0 opacity-0 overflow-hidden border-none' : 'w-64 h-dvh'}
+    `}>
+      <div className={`p-6 min-w-[16rem] transition-opacity duration-[50ms] ${isSidebarHidden ? 'opacity-0' : 'opacity-100'}`}>
         {/* Logo */}
         <div className="mb-8">
           <Link href="/dashboard">
@@ -335,8 +338,7 @@ export default function Sidebar({ user, onLogout, isMobileOpen, setIsMobileOpen,
         </nav>
       </div>
 
-      {/* Footer */}
-      <div className="mt-auto p-6 mb-8">
+      <div className={`mt-auto p-6 mb-8 min-w-[16rem] transition-opacity duration-[50ms] ${isSidebarHidden ? 'opacity-0' : 'opacity-100'}`}>
         <button
           onClick={handleLogout}
           className="flex items-center justify-center gap-2.5 w-full py-3 rounded-xl text-red-500 font-bold bg-red-500/5 hover:bg-red-500/10 transition-all duration-200 group active:scale-[0.98] border border-red-500/10"

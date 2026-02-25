@@ -64,7 +64,7 @@ function SessionDetailContent() {
   const searchParams = useSearchParams();
   const targetTitle = searchParams.get('title');
   const targetId = searchParams.get('issue_id');
-  const { toggleMobileMenu } = useSidebar();
+  const { toggleMobileMenu, setIsSidebarHidden } = useSidebar();
 
   const [data, setData] = useState<SessionDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -79,6 +79,11 @@ function SessionDetailContent() {
   const [activeThreadRootId, setActiveThreadRootId] = useState<number | null>(null);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [availableGroups, setAvailableGroups] = useState<any[]>([]);
+
+  useEffect(() => {
+    // Component unmount cleanup just in case
+    return () => setIsSidebarHidden(false);
+  }, [setIsSidebarHidden]);
 
   // Group Members Modal State
   const [isGroupModalOpen, setIsGroupModalOpen] = useState(false);
@@ -179,6 +184,19 @@ function SessionDetailContent() {
   // State for Accordion Expansion (One can be open at a time)
   const [expandedIssueIndex, setExpandedIssueIndex] = useState<number | null>(null);
 
+  // Check if current user is a member of the active group
+  const isMemberOfActiveGroup = useMemo(() => {
+    if (!user || !activeThreadRootId || !availableGroups.length) return false;
+    const activeGroup = availableGroups.find(g => g.id === activeThreadRootId);
+    if (!activeGroup) return false;
+    const match = activeGroup.content.match(/members:\[(.*?)\]/);
+    if (match) {
+      const members = match[1].split(',').map((id: string) => id.trim());
+      return members.includes(String(user.id));
+    }
+    return false;
+  }, [user?.id, activeThreadRootId, availableGroups]);
+
   // Layout state for Plotly to handle zoom/reset
   const [plotLayout, setPlotLayout] = useState<any>({
     autosize: true,
@@ -223,14 +241,12 @@ function SessionDetailContent() {
     // Trigger reset immediately and frequently during the transition
     window.dispatchEvent(new Event('resize'));
 
-    const timers = [
-      setTimeout(() => window.dispatchEvent(new Event('resize')), 10),
-      setTimeout(() => window.dispatchEvent(new Event('resize')), 50),
-      setTimeout(() => window.dispatchEvent(new Event('resize')), 100), // End of animation
-    ];
+    const timers = Array.from({ length: 4 }).map((_, i) =>
+      setTimeout(() => window.dispatchEvent(new Event('resize')), i * 15)
+    );
 
     return () => timers.forEach(t => clearTimeout(t));
-  }, [activeIssue]);
+  }, [activeIssue, isChatOpen]);
 
   useEffect(() => {
     if (!id) return;
@@ -633,6 +649,12 @@ function SessionDetailContent() {
 
   const handleCloseRightPanel = () => {
     setIsChatOpen(false);
+    setIsSidebarHidden(false);
+  };
+
+  const handleOpenRightPanel = () => {
+    setIsChatOpen(true);
+    setIsSidebarHidden(true);
   };
 
   const handleAnalyzeThread = async (rootCommentId: number) => {
@@ -823,7 +845,7 @@ function SessionDetailContent() {
         {/* Floating Discussion Button */}
         {!isChatOpen && (
           <button
-            onClick={() => setIsChatOpen(true)}
+            onClick={handleOpenRightPanel}
             className="fixed bottom-6 right-6 z-40 group flex items-center gap-2 px-5 py-3 rounded-full bg-sage-600/95 hover:bg-sage-700 backdrop-blur-md shadow-lg border border-sage-500/50 text-white font-bold transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
           >
             <div className="relative">
@@ -833,7 +855,9 @@ function SessionDetailContent() {
                 <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-white"></span>
               </span>
             </div>
-            <span className="text-sm tracking-wide">ディスカッションに参加する</span>
+            <span className="text-sm tracking-wide">
+              {user?.role === 'system_admin' ? 'ディスカッションを閲覧' : 'ディスカッションに参加する'}
+            </span>
           </button>
         )}
 
@@ -1533,20 +1557,37 @@ function SessionDetailContent() {
         <div className={`
           bg-white flex flex-col shrink-0 transition-all duration-[50ms] ease-out origin-right
           ${isChatOpen
-            ? 'fixed inset-0 z-50 md:static md:w-[400px] lg:w-[450px] opacity-100 shadow-xl md:shadow-none md:border-l md:border-slate-200'
+            ? 'fixed inset-0 z-50 md:static md:w-[500px] lg:w-[600px] opacity-100 shadow-xl md:shadow-none md:border-l md:border-slate-200'
             : 'w-0 opacity-0 overflow-hidden'}
         `}>
           {/* Important: Use fixed widths in min-w to prevent content squashing during transition */}
-          <div className="flex-1 flex flex-col min-w-full md:min-w-[400px] lg:min-w-[450px] h-full overflow-hidden bg-white">
+          <div className="flex-1 flex flex-col min-w-full md:min-w-[500px] lg:min-w-[600px] h-full overflow-hidden bg-white">
 
             {/* Panel Header (Fixed at top) */}
             <div className="shrink-0 bg-white/95 z-20 px-4 md:px-6 py-4 border-b border-slate-100 shadow-sm flex items-center justify-between">
               <div className="min-w-0 flex-1">
                 <span className="text-[10px] bg-sage-100 text-sage-600 px-2 py-0.5 rounded font-bold mb-1 inline-block">グループディスカッション</span>
                 <div className="flex items-center gap-2 mt-0.5">
-                  <h3 className="text-sm font-bold text-sage-800 line-clamp-1">
-                    {availableGroups.find(g => g.id === activeThreadRootId)?.content.split('\n')[0].replace('System Root for ', '') || '報告ディスカッション'}
-                  </h3>
+                  {user?.role === 'system_admin' && availableGroups.length > 0 ? (
+                    <select
+                      value={activeThreadRootId || ''}
+                      onChange={(e) => setActiveThreadRootId(Number(e.target.value))}
+                      className="text-sm font-bold text-sage-800 bg-slate-50 border border-slate-200 rounded px-2 py-1 max-w-[200px] cursor-pointer outline-none focus:ring-2 focus:ring-sage-400"
+                    >
+                      {availableGroups.map((g, idx) => {
+                        const groupName = g.content.split('\n')[0].replace('System Root for ', '') || `グループ ${idx + 1}`;
+                        return (
+                          <option key={g.id} value={g.id}>
+                            {groupName}
+                          </option>
+                        );
+                      })}
+                    </select>
+                  ) : (
+                    <h3 className="text-sm font-bold text-sage-800 line-clamp-1">
+                      {availableGroups.find(g => g.id === activeThreadRootId)?.content.split('\n')[0].replace('System Root for ', '') || '報告ディスカッション'}
+                    </h3>
+                  )}
                 </div>
               </div>
               <button
@@ -1680,36 +1721,46 @@ function SessionDetailContent() {
 
             {/* Input Area (Fixed Bottom of Panel) */}
             <div className="bg-white border-t border-slate-100 p-4 sticky bottom-0 z-30">
-              <div className="animate-in slide-in-from-bottom-2 fade-in">
-                <h4 className="text-xs font-bold text-slate-500 mb-2 flex items-center gap-1">
-                  <MessageCircle className="h-3 w-3" /> {isCreatingPost ? "新しいディスカッションを開始" : "コメントを投稿"}
-                </h4>
-                <RichTextEditor
-                  content={postContent}
-                  onChange={setPostContent}
-                  placeholder="この課題について意見やアイデアを投稿しましょう..."
-                  className="min-h-[100px] mb-2 text-sm"
-                  minHeight="100px"
-                />
-                <div className="flex items-center justify-between mt-2">
-                  <label className="flex items-center text-xs text-slate-500 cursor-pointer select-none">
-                    <input
-                      type="checkbox"
-                      checked={isAnonymous}
-                      onChange={(e) => setIsAnonymous(e.target.checked)}
-                      className="mr-1.5 rounded text-sage-600 focus:ring-sage-500"
-                    />
-                    匿名で投稿する
-                  </label>
-                  <button
-                    onClick={handleCreatePost}
-                    disabled={!postContent.trim()}
-                    className="btn-primary px-4 py-2 text-xs font-bold disabled:opacity-50"
-                  >
-                    投稿する
-                  </button>
+              {user?.role === 'system_admin' ? (
+                <div className="py-4 text-center text-sm text-slate-500 bg-slate-50 rounded-lg border border-slate-200">
+                  <p>システム管理者は閲覧モードです。ディスカッションには参加できません。</p>
                 </div>
-              </div>
+              ) : !isMemberOfActiveGroup && availableGroups.length > 0 && activeThreadRootId ? (
+                <div className="py-4 text-center text-sm text-slate-500 bg-slate-50 rounded-lg border border-slate-200 shadow-inner">
+                  <p>この議論グループのメンバーではないため、参加できません。</p>
+                </div>
+              ) : (
+                <div className="animate-in slide-in-from-bottom-2 fade-in">
+                  <h4 className="text-xs font-bold text-slate-500 mb-2 flex items-center gap-1">
+                    <MessageCircle className="h-3 w-3" /> {isCreatingPost ? "新しいディスカッションを開始" : "コメントを投稿"}
+                  </h4>
+                  <RichTextEditor
+                    content={postContent}
+                    onChange={setPostContent}
+                    placeholder="課題について意見やアイデアを投稿しましょう..."
+                    className="min-h-[100px] mb-2 text-sm"
+                    minHeight="100px"
+                  />
+                  <div className="flex items-center justify-between mt-2">
+                    <label className="flex items-center text-xs text-slate-500 cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        checked={isAnonymous}
+                        onChange={(e) => setIsAnonymous(e.target.checked)}
+                        className="mr-1.5 rounded text-sage-600 focus:ring-sage-500"
+                      />
+                      匿名で投稿する
+                    </label>
+                    <button
+                      onClick={handleCreatePost}
+                      disabled={!postContent.trim()}
+                      className="btn-primary px-4 py-2 text-xs font-bold disabled:opacity-50"
+                    >
+                      投稿する
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
 
           </div>

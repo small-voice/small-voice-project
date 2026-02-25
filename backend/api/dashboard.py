@@ -581,6 +581,9 @@ def create_comment(
     current_user: UserResponse = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
+    if current_user.role == 'system_admin':
+        raise HTTPException(status_code=403, detail="システム管理者はディスカッションに参加できません。")
+        
     # Verify Session exists and user has access (org check)
     session = db.query(AnalysisSession).filter(
         AnalysisSession.id == session_id,
@@ -598,7 +601,17 @@ def create_comment(
         ).first()
         if not parent:
             raise HTTPException(status_code=400, detail="Parent comment not found")
-            
+        
+        # Check if parent is a System Root (Group Root) and enforce membership
+        if "System Root for Group" in parent.content:
+            import re
+            match = re.search(r"members:\[(.*?)\]", parent.content)
+            if match:
+                members_str = match.group(1)
+                members_list = [int(x.strip()) for x in members_str.split(',') if x.strip().isdigit()]
+                if current_user.id not in members_list:
+                    raise HTTPException(status_code=403, detail="このグループのメンバーではないため投稿できません。")
+                    
     new_comment = Comment(
         session_id=session_id,
         user_id=current_user.id,
@@ -801,8 +814,8 @@ def analyze_thread(
         print(f"Thread Analysis error: {e}")
         raise HTTPException(status_code=500, detail="Thread analysis failed")
 
-@router.get("/sessions/{session_id}/issues")
-def get_session_issues(
+@router.get("/sessions/{session_id}/groups")
+def get_session_groups(
     session_id: int,
     current_user: UserResponse = Depends(get_current_user),
     db: Session = Depends(get_db)
@@ -819,24 +832,19 @@ def get_session_issues(
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
         
-    # Get Issue Definition
-    issue_def = db.query(IssueDefinition).filter(IssueDefinition.session_id == session_id).first()
-    if not issue_def or not issue_def.content:
-        return []
-        
-    try:
-        issues = json.loads(issue_def.content)
-        if isinstance(issues, list):
-            return [{"id": issue.get("id"), "title": issue.get("title")} for issue in issues if issue.get("title")]
-        return []
-    except:
-        return []
+    # Find all group roots
+    roots = db.query(Comment).filter(
+        Comment.session_id == session_id,
+        Comment.parent_id == None,
+        Comment.content.like("%System Root for Group%")
+    ).all()
+    
+    return [{"id": str(c.id), "title": c.content.split('\n')[0].replace('System Root for ', '')} for c in roots]
 
 @router.post("/sessions/{session_id}/comments/import")
 def import_session_comments(
     session_id: int,
-    issue_title: str = Form(...),
-    issue_id: Optional[str] = Form(None),
+    group_id: int = Form(...),
     file: UploadFile = File(...),
     current_user: UserResponse = Depends(get_current_user),
     db: Session = Depends(get_db)
@@ -850,58 +858,36 @@ def import_session_comments(
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
 
-    # 3. Find or Create System Root for Issue
-    hidden_tag = f"<!-- issue:{issue_title} -->"
-    id_tag = f"<!-- issue_id:{issue_id} -->" if issue_id else ""
-    
-    # Check for existing root
-    # We look for a comment in this session that is a root (parent_id is None) and contains the tag
-    # Priority to issue_id if provided
-    root_query = db.query(Comment).filter(
+    # 3. Find Group Root
+    root_comment = db.query(Comment).filter(
+        Comment.id == group_id,
         Comment.session_id == session_id,
-        Comment.parent_id == None
-    )
-    
-    if issue_id:
-        root_comment = root_query.filter(Comment.content.like(f"%{id_tag}%")).first()
-    else:
-        root_comment = root_query.filter(Comment.content.like(f"%{hidden_tag}%")).first()
+        Comment.parent_id == None,
+        Comment.content.like("%System Root for Group%")
+    ).first()
     
     if not root_comment:
-        # Create new root
-        system_content = f"System Root for Issue: {issue_title}\n\n{id_tag}{hidden_tag} <!-- system_root -->"
-        root_comment = Comment(
-            session_id=session_id,
-            user_id=current_user.id, # System Admin owns the root
-            content=system_content,
-            is_anonymous=False
-        )
-        db.add(root_comment)
-        db.commit()
-        db.refresh(root_comment)
+        raise HTTPException(status_code=404, detail="Group root not found")
         
-    # 4. Get Org Members for Random Assignment
-    if not session.organization_id:
-         raise HTTPException(status_code=400, detail="Session has no organization")
-         
-    members = db.query(OrganizationMember).filter(
-        OrganizationMember.organization_id == session.organization_id
-    ).all()
-    
-    member_user_ids = [m.user_id for m in members]
+    # 4. Extract Group Members
+    import re
+    match = re.search(r"members:\[(.*?)\]", root_comment.content)
+    member_user_ids = []
+    if match:
+        member_user_ids = [int(x.strip()) for x in match.group(1).split(',') if x.strip().isdigit()]
+        
     if not member_user_ids:
-        # Fallback to current user if no members (unlikely)
-        member_user_ids = [current_user.id]
+        raise HTTPException(status_code=400, detail="No members assigned to this group")
 
-    # 5. Process CSV using pandas or csv module. Using csv module for simplicity with Stream
+    # 5. Process CSV using pandas
     import pandas as pd
+    import io
+    import random
     try:
         content = file.file.read()
-        # Auto-detect encoding? Assume utf-8 first
         try:
             df = pd.read_csv(io.BytesIO(content))
         except UnicodeDecodeError:
-            # Try Shift-JIS just in case for excel exports
             df = pd.read_csv(io.BytesIO(content), encoding='shift-jis')
             
         if 'content' not in df.columns:
@@ -913,11 +899,8 @@ def import_session_comments(
             if not text or text.lower() == 'nan':
                 continue
                 
-            # Random User
+            # Random User from Group Members
             uid = random.choice(member_user_ids)
-            
-            # Random Anonymity (50/50 is default? or maybe bias towards one?)
-            # User said "Random is fine"
             is_anon = random.choice([True, False])
             
             new_comment = Comment(

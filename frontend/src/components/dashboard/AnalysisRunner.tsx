@@ -189,7 +189,7 @@ export default function AnalysisRunner({ onSuccess }: AnalysisRunnerProps) {
         </div>
 
         <div>
-          <label className="block text-sm font-bold text-gray-700 mb-2">4. 議論グループの最大人数</label>
+          <label className="block text-sm font-bold text-gray-700 mb-2">4. ディスカッショングループの最大人数</label>
           <input
             type="number"
             min="1"
