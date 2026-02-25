@@ -500,6 +500,33 @@ def run_analysis_endpoint(
             
         db.commit()
         
+        # 4. Create Discussion Groups
+        max_group_size = int(payload.get("max_group_size", 5))
+        members = db.query(OrganizationMember).join(User).filter(
+            OrganizationMember.organization_id == current_user.current_org_id,
+            User.role != 'system_admin'
+        ).all()
+        
+        member_ids = [m.user_id for m in members]
+        import random
+        random.shuffle(member_ids)
+        
+        # Splitting into chunks of 'max_group_size'
+        chunks = [member_ids[i:i + max_group_size] for i in range(0, len(member_ids), max_group_size)]
+        if not chunks:
+            chunks = [[]]
+            
+        for i, chunk in enumerate(chunks, 1):
+            system_content = f"System Root for Group {i}\n\n<!-- group_id:{i}, members:{json.dumps(chunk)} --> <!-- system_root -->"
+            db.add(Comment(
+                session_id=sess.id,
+                user_id=current_user.id,
+                content=system_content,
+                is_anonymous=False
+            ))
+            
+        db.commit()
+        
         return {"message": "Analysis completed", "session_id": sess.id}
         
     except Exception as e:
@@ -658,7 +685,8 @@ def update_comment(
         raise HTTPException(status_code=404, detail="Comment not found")
         
     # Check ownership
-    if comment.user_id != current_user.id:
+    is_admin = current_user.role in ["admin", "system_admin"] or current_user.org_role == "admin"
+    if comment.user_id != current_user.id and not is_admin:
         raise HTTPException(status_code=403, detail="Not authorized to edit this comment")
         
     comment.content = payload.content

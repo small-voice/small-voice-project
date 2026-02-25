@@ -25,6 +25,7 @@ export default function AnalysisRunner({ onSuccess }: AnalysisRunnerProps) {
   const [selectedSurveyId, setSelectedSurveyId] = useState<number | null>(null);
   const [selectedQuestionId, setSelectedQuestionId] = useState<number | null>(null);
   const [reportTitle, setReportTitle] = useState('');
+  const [maxGroupSize, setMaxGroupSize] = useState<number>(5);
   const [analyzing, setAnalyzing] = useState(false);
 
   // Progress Log State
@@ -105,7 +106,8 @@ export default function AnalysisRunner({ onSuccess }: AnalysisRunnerProps) {
       const res = await axios.post('/api/dashboard/sessions/analyze', {
         survey_id: selectedSurveyId,
         question_id: selectedQuestionId,
-        title: reportTitle
+        title: reportTitle,
+        max_group_size: maxGroupSize
       }, {
         withCredentials: true,
         timeout: 600000 // 10 minutes timeout to prevent client-side abort
@@ -182,6 +184,18 @@ export default function AnalysisRunner({ onSuccess }: AnalysisRunnerProps) {
             value={reportTitle}
             onChange={(e) => setReportTitle(e.target.value)}
             placeholder="レポートのタイトル"
+            disabled={analyzing}
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-bold text-gray-700 mb-2">4. 議論グループの最大人数</label>
+          <input
+            type="number"
+            min="1"
+            className="glass-input w-full p-3 text-base"
+            value={maxGroupSize}
+            onChange={(e) => setMaxGroupSize(Math.max(1, parseInt(e.target.value) || 1))}
             disabled={analyzing}
           />
         </div>
