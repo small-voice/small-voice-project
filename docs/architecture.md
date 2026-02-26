@@ -274,7 +274,7 @@
 - **IssueDefinition**: 課題タイトル、関連トピック、洞察、ソースタイプ (`majority` | `small_voice`) をJSON形式で保持
 
 ### 5. グループごとの議論チャット
-メンバーをランダムに各グループに割り当て、各グループごとに専用のチャット空間を生成し、各課題に応じた議論を行う
+指定されたグループ数に応じてメンバーをランダムかつ均等に各グループに割り当て、各グループごとに専用のチャット空間を生成し、各課題に応じた議論を行う
 
 - **API**: `backend/api/dashboard.py`
   - `POST /api/dashboard/sessions/{session_id}/comments` - コメント投稿

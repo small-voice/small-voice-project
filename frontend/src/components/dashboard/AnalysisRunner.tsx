@@ -25,7 +25,7 @@ export default function AnalysisRunner({ onSuccess }: AnalysisRunnerProps) {
   const [selectedSurveyId, setSelectedSurveyId] = useState<number | null>(null);
   const [selectedQuestionId, setSelectedQuestionId] = useState<number | null>(null);
   const [reportTitle, setReportTitle] = useState('');
-  const [maxGroupSize, setMaxGroupSize] = useState<number>(5);
+  const [groupCount, setGroupCount] = useState<number>(3);
   const [analyzing, setAnalyzing] = useState(false);
 
   // Progress Log State
@@ -107,7 +107,7 @@ export default function AnalysisRunner({ onSuccess }: AnalysisRunnerProps) {
         survey_id: selectedSurveyId,
         question_id: selectedQuestionId,
         title: reportTitle,
-        max_group_size: maxGroupSize
+        group_count: groupCount
       }, {
         withCredentials: true,
         timeout: 600000 // 10 minutes timeout to prevent client-side abort
@@ -189,13 +189,13 @@ export default function AnalysisRunner({ onSuccess }: AnalysisRunnerProps) {
         </div>
 
         <div>
-          <label className="block text-sm font-bold text-gray-700 mb-2">4. ディスカッショングループの最大人数</label>
+          <label className="block text-sm font-bold text-gray-700 mb-2">4. ディスカッショングループ数</label>
           <input
             type="number"
             min="1"
             className="glass-input w-full p-3 text-base"
-            value={maxGroupSize}
-            onChange={(e) => setMaxGroupSize(Math.max(1, parseInt(e.target.value) || 1))}
+            value={groupCount}
+            onChange={(e) => setGroupCount(Math.max(1, parseInt(e.target.value) || 1))}
             disabled={analyzing}
           />
         </div>

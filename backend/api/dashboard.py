@@ -566,7 +566,10 @@ def run_analysis_endpoint(
         db.commit()
         
         # 4. Create Discussion Groups
-        max_group_size = int(payload.get("max_group_size", 5))
+        group_count = int(payload.get("group_count", 3))
+        if group_count < 1:
+            group_count = 1
+            
         members = db.query(OrganizationMember).join(User).filter(
             OrganizationMember.organization_id == current_user.current_org_id,
             User.role != 'system_admin'
@@ -576,8 +579,16 @@ def run_analysis_endpoint(
         import random
         random.shuffle(member_ids)
         
-        # Splitting into chunks of 'max_group_size'
-        chunks = [member_ids[i:i + max_group_size] for i in range(0, len(member_ids), max_group_size)]
+        # 均等に割り振る (evenly distribute)
+        chunks = [[] for _ in range(group_count)]
+        if member_ids:
+            for i, member_id in enumerate(member_ids):
+                chunks[i % group_count].append(member_id)
+        else:
+            chunks = [[]]
+            
+        # Filter out empty chunks
+        chunks = [c for c in chunks if c]
         if not chunks:
             chunks = [[]]
             
