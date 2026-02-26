@@ -402,53 +402,70 @@ export default function LandingPage() {
                   </div>
                   <h4 className="text-xl font-black text-slate-900">柔軟な組織管理</h4>
                 </div>
-                <p className="text-sm text-slate-500 mb-8 leading-relaxed font-medium">
+                <p className="text-sm text-slate-500 mb-6 leading-relaxed font-medium">
                   組織の実態に即して、部署やプロジェクト単位で独立した管理空間（テナント）を柔軟に作成・運用できます。
                 </p>
-                <ul className="space-y-5">
-                  {[
-                    { icon: <CheckCircle2 className="w-5 h-5 text-sage-500 mt-0.5 shrink-0" />, title: '多重所属に対応', desc: '複数の組織に同時に所属可能' },
-                    { icon: <CheckCircle2 className="w-5 h-5 text-sage-500 mt-0.5 shrink-0" />, title: '実態に即した管理', desc: '部署・案件・プロジェクト単位で運用' },
-                    { icon: <CheckCircle2 className="w-5 h-5 text-sage-500 mt-0.5 shrink-0" />, title: 'セキュアな分離', desc: 'データは組織ごとに論理的に分離' },
-                  ].map((item, i) => (
-                    <li key={i} className="flex items-start gap-3 text-sm font-medium text-slate-700">
-                      {item.icon}
-                      <span><span className="font-bold text-slate-900">{item.title}</span>：{item.desc}</span>
-                    </li>
-                  ))}
-                </ul>
+                <div className="space-y-4 mt-auto">
+                  <div className="bg-sage-50/50 p-4 rounded-2xl border border-sage-100/50">
+                    <h5 className="font-bold text-sage-900 mb-1 flex items-center gap-2 text-sm">
+                      <CheckCircle2 className="w-4 h-4 text-sage-600" /> 多重所属に対応
+                    </h5>
+                    <p className="text-xs text-sage-800/80 leading-relaxed font-medium">
+                      複数の組織に同時に所属可能。横断的なプロジェクトにも適応します。
+                    </p>
+                  </div>
+                  <div className="bg-sage-50/50 p-4 rounded-2xl border border-sage-100/50">
+                    <h5 className="font-bold text-sage-900 mb-1 flex items-center gap-2 text-sm">
+                      <CheckCircle2 className="w-4 h-4 text-sage-600" /> 実態に即した管理
+                    </h5>
+                    <p className="text-xs text-sage-800/80 leading-relaxed font-medium">
+                      全社・部署・案件など、様々なスケールのグループで運用・分析できます。
+                    </p>
+                  </div>
+                  <div className="bg-sage-50/50 p-4 rounded-2xl border border-sage-100/50">
+                    <h5 className="font-bold text-sage-900 mb-1 flex items-center gap-2 text-sm">
+                      <CheckCircle2 className="w-4 h-4 text-sage-600" /> セキュアな分離
+                    </h5>
+                    <p className="text-xs text-sage-800/80 leading-relaxed font-medium">
+                      組織間でデータは完全に分離され、第三者に情報が漏れることはありません。
+                    </p>
+                  </div>
+                </div>
               </div>
 
               {/* Permission Design */}
-              <div className="bg-white/80 p-8 rounded-3xl border border-slate-200 shadow-sm hover:shadow-xl transition-all h-full group">
+              <div className="bg-white/80 p-8 rounded-3xl border border-slate-200 shadow-sm hover:shadow-xl transition-all h-full flex flex-col group">
                 <div className="flex items-center gap-4 mb-6">
                   <div className="bg-slate-100 p-4 rounded-2xl text-slate-600 shrink-0 group-hover:bg-purple-100 group-hover:text-purple-600 transition-colors">
                     <Shield className="w-7 h-7" />
                   </div>
                   <h4 className="text-xl font-black text-slate-900">3つの権限設計</h4>
                 </div>
-                <div className="space-y-4">
+                <p className="text-sm text-slate-500 mb-6 leading-relaxed font-medium">
+                  プラットフォーム全体と組織内の運用を分離し、役割に応じた明確で安全なアクセス制御を提供します。
+                </p>
+                <div className="space-y-4 mt-auto">
                   <div className="bg-purple-50/50 p-4 rounded-2xl border border-purple-100/50">
                     <h5 className="font-bold text-purple-900 mb-1 flex items-center gap-2 text-sm">
-                      <Shield className="w-4 h-4" /> システム管理者
+                      <Shield className="w-4 h-4 text-purple-600" /> システム管理者
                     </h5>
                     <p className="text-xs text-purple-800/80 leading-relaxed font-medium">
                       システム全体の統括。組織の作成や全ユーザーの管理権限を持ちます。
                     </p>
                   </div>
-                  <div className="bg-blue-50/50 p-4 rounded-2xl border border-blue-100/50">
-                    <h5 className="font-bold text-blue-900 mb-1 flex items-center gap-2 text-sm">
-                      <Users className="w-4 h-4" /> 組織管理者
+                  <div className="bg-amber-50/50 p-4 rounded-2xl border border-amber-100/50">
+                    <h5 className="font-bold text-amber-900 mb-1 flex items-center gap-2 text-sm">
+                      <Shield className="w-4 h-4 text-amber-600" /> 組織管理者
                     </h5>
-                    <p className="text-xs text-blue-800/80 leading-relaxed font-medium">
+                    <p className="text-xs text-amber-800/80 leading-relaxed font-medium">
                       所属組織内のフォーム作成・管理、分析実行・結果管理を行います。
                     </p>
                   </div>
-                  <div className="bg-green-50/50 p-4 rounded-2xl border border-green-100/50">
-                    <h5 className="font-bold text-green-900 mb-1 flex items-center gap-2 text-sm">
-                      <User className="w-4 h-4" /> 一般ユーザー
+                  <div className="bg-slate-50/50 p-4 rounded-2xl border border-slate-200/50">
+                    <h5 className="font-bold text-slate-700 mb-1 flex items-center gap-2 text-sm">
+                      <User className="w-4 h-4 text-slate-500" /> 一般メンバー
                     </h5>
-                    <p className="text-xs text-green-800/80 leading-relaxed font-medium">
+                    <p className="text-xs text-slate-600/80 leading-relaxed font-medium">
                       フォームへの回答・申請、分析結果の閲覧、議論への参加が可能です。
                     </p>
                   </div>
@@ -581,14 +598,14 @@ export default function LandingPage() {
                         </div>
                       </td>
                       <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
-                          ${user.role.includes('システム') ? 'bg-purple-100 text-purple-800' :
-                            user.role.includes('組織') ? 'bg-blue-100 text-blue-800' :
-                              'bg-green-100 text-green-800'}`}>
+                        <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-wider 
+                          ${user.role.includes('システム') ? 'bg-purple-100 text-purple-700' :
+                            user.role.includes('組織') ? 'bg-amber-100 text-amber-700' :
+                              'bg-slate-100 text-slate-600'}`}>
                           {user.role}
                         </span>
                       </td>
-                      <td className="px-3 sm:px-6 py-4 text-xs text-slate-500">{user.org}</td>
+                      <td className="px-3 sm:px-6 py-4 text-xs text-slate-500 leading-relaxed">{user.org}</td>
                     </tr>
                   ))}
                 </tbody>
