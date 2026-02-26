@@ -793,7 +793,9 @@ function SessionDetailContent() {
             <div className="hidden sm:flex items-center gap-3 text-xs text-slate-500">
               <p>テーマ: {data.theme}</p>
               <span>•</span>
-              <p>{new Date(data.created_at).toLocaleDateString('ja-JP')} 作成</p>
+              {data.created_at && !isNaN(new Date(data.created_at).getTime()) && (
+                <p>{new Date(data.created_at).toLocaleDateString('ja-JP')} 作成</p>
+              )}
             </div>
           </div>
         </div>

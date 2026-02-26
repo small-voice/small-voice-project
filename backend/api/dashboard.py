@@ -106,6 +106,7 @@ class SessionDetail(BaseModel):
     title: str
     theme: str
     is_published: bool
+    created_at: datetime
     report_content: Optional[str] = None
     results: List[AnalysisResultItem] = []
     comments: List[CommentItem] = []
@@ -192,6 +193,7 @@ def get_session_detail(
         title=session.title,
         theme=session.theme,
         is_published=session.is_published,
+        created_at=session.created_at,
         report_content=issue_def.content if issue_def else None,
         results=[
             AnalysisResultItem(

@@ -167,7 +167,9 @@ function DashboardContent() {
                             <span className={`px-2 py-1 rounded-md text-xs font-bold ${sess.is_published ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'}`}>
                               {sess.is_published ? '公開中' : '下書き'}
                             </span>
-                            <span className="text-slate-400 text-xs font-bold">{new Date(sess.created_at).toLocaleDateString()}</span>
+                            {sess.created_at && !isNaN(new Date(sess.created_at).getTime()) && (
+                              <span className="text-slate-400 text-xs font-bold">{new Date(sess.created_at).toLocaleDateString()}</span>
+                            )}
                           </div>
                           <h3 className="text-lg font-bold text-sage-dark mb-2 line-clamp-2 group-hover:text-amber-500 transition-colors">{sess.title}</h3>
                           <p className="text-slate-500 text-sm mb-6 line-clamp-2">テーマ: {sess.theme}</p>
