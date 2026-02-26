@@ -115,7 +115,7 @@ AI分析の実行単位（セッション）を管理します。
 | `organization_id` | Integer | 紐付く組織ID (外部キー)。 |
 | `is_published` | Boolean | 一般ユーザーへの公開状態。 |
 | `comment_analysis` | Text | チャットコメントのAI分析結果。 |
-| `is_comment_analysis_published` | Boolean | コメント分析結果の公開状態。 |
+| `is_comment_analysis_published` | Boolean | コメント分析結果の公開状態（※現在は使用されていません）。 |
 
 ### 分析結果 (`analysis_results`)
 セッションごとの個別の分析結果（1レコードごとの分析）を格納します。

@@ -329,24 +329,7 @@ function SessionDetailContent() {
     }
   };
 
-  const handleToggleAnalysisPublish = async () => {
-    if (!data) return;
-    const action = data.is_comment_analysis_published ? "非公開" : "公開";
-    if (!confirm(`AI分析結果を一般ユーザーに${action}にしますか？`)) return;
-    setIsUpdating(true);
-    try {
-      const newState = !data.is_comment_analysis_published;
-      await axios.put(`/api/dashboard/sessions/${id}/publish-analysis`, {
-        is_published: newState
-      }, { withCredentials: true });
 
-      setData({ ...data, is_comment_analysis_published: newState });
-    } catch (error) {
-      alert("更新に失敗しました");
-    } finally {
-      setIsUpdating(false);
-    }
-  };
 
   // Create Post State
   const [isCreatingPost, setIsCreatingPost] = useState(false);
@@ -1819,16 +1802,8 @@ function SessionDetailContent() {
                     <Sparkles className="w-3.5 h-3.5" />
                     AIファシリテーターの整理と提案
                   </h4>
-                  {activeThreadRootId && (user?.role === 'system_admin' || user?.org_role === 'admin') && (
+                  {activeThreadRootId && (
                     <div className="flex gap-2">
-                      <button
-                        onClick={handleToggleAnalysisPublish}
-                        disabled={isUpdating}
-                        className={`text-[10px] px-2 py-1 rounded shadow-sm transition-all flex items-center gap-1 font-bold ${data.is_comment_analysis_published ? 'bg-amber-200 text-amber-800 hover:bg-amber-300' : 'bg-white border border-amber-200 text-amber-700 hover:bg-amber-50'}`}
-                        title={data.is_comment_analysis_published ? "非公開にする" : "一般公開する"}
-                      >
-                        {data.is_comment_analysis_published ? <><Archive className="w-3 h-3" /> 非公開</> : <><CheckCircle className="w-3 h-3 text-green-600" /> 公開</>}
-                      </button>
                       <button
                         onClick={() => handleAnalyzeThread(activeThreadRootId!)}
                         disabled={isAnalyzing}
@@ -1883,29 +1858,19 @@ function SessionDetailContent() {
                     <div className="text-center py-3 bg-white/50 rounded-lg border border-dashed border-amber-200">
                       <p className="text-xs text-slate-400 mb-2">まだ分析結果がありません</p>
 
-                      {/* Admin View */}
-                      {(user?.role === 'system_admin' || user?.org_role === 'admin') ? (
-                        <>
-                          {activeThreadRootId ? (
-                            <button
-                              onClick={() => handleAnalyzeThread(activeThreadRootId!)}
-                              disabled={isAnalyzing}
-                              className="text-[10px] text-amber-600 hover:text-amber-800 underline disabled:opacity-50"
-                            >
-                              分析を実行する
-                            </button>
-                          ) : (
-                            <p className="text-[10px] text-slate-400">スレッドが作成されると分析を実行できます</p>
-                          )}
-                        </>
-                      ) : (
-                        /* Member View */
-                        <p className="text-[10px] text-slate-400">
-                          {!activeThreadRootId
-                            ? "スレッドが作成され、分析が実行されるとここに表示されます"
-                            : "分析がされるまでお待ちください"}
-                        </p>
-                      )}
+                      <>
+                        {activeThreadRootId ? (
+                          <button
+                            onClick={() => handleAnalyzeThread(activeThreadRootId!)}
+                            disabled={isAnalyzing}
+                            className="text-[10px] text-amber-600 hover:text-amber-800 underline disabled:opacity-50"
+                          >
+                            分析を実行する
+                          </button>
+                        ) : (
+                          <p className="text-[10px] text-slate-400">スレッドが作成されると分析を実行できます</p>
+                        )}
+                      </>
                     </div>
                   )}
               </div>
