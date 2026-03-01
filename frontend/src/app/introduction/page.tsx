@@ -144,11 +144,14 @@ function StepCard({ step }: { step: StepDetail }) {
         </div>
       </div>
       <p className="text-sm text-slate-600 leading-relaxed mt-4 mb-3">{step.description}</p>
-      <ul className="space-y-2">
+      <ul className="space-y-3">
         {step.bullets.map((b, i) => (
           <li key={i} className="flex items-start gap-2 text-sm text-slate-700">
             <span className="shrink-0 mt-0.5">{b.icon}</span>
-            <span><span className="font-bold">{b.title}</span>{b.desc ? `：${b.desc}` : ''}</span>
+            <div className="flex flex-col">
+              <span className="font-bold text-slate-800">{b.title}</span>
+              {b.desc && <span className="text-slate-600 mt-0.5 leading-relaxed">{b.desc}</span>}
+            </div>
           </li>
         ))}
       </ul>
@@ -195,11 +198,11 @@ export default function LandingPage() {
       bgColor: 'bg-emerald-50/60',
       borderColor: 'border-emerald-300',
       icon: <FileText className="w-6 h-6" />,
-      description: '多様なチャネルから組織の声を集める。ただしアンケート集計時点では個人のバイアスがかかっている状態です。',
+      description: '多様なチャネルを通じて組織の声を収集する。ただし、個人の意見には特有の背景によるバイアスが含まれるため、単に集約するだけでは、組織全体の合意形成や本質的な課題解決に繋げるのは難しい。',
       bullets: [
-        { icon: <MessageSquare className="w-4 h-4 text-emerald-600" />, title: '雑談掲示板からのフォーム作成', desc: 'メンバーの日常の声をAIが分析し、フォームのテーマを自動抽出' },
-        { icon: <Megaphone className="w-4 h-4 text-emerald-600" />, title: 'メンバーからのフォーム申請', desc: 'ボトムアップで問いをフォーム化し管理者へ承認申請' },
-        { icon: <Download className="w-4 h-4 text-emerald-600" />, title: '外部フォームのインポート', desc: 'GoogleフォームなどのCSVを一括取り込み' },
+        { icon: <MessageSquare className="w-4 h-4 text-emerald-600" />, title: '雑談掲示板からのフォーム作成', desc: 'メンバーの日常の声をAIが分析し、集計すべき情報をアンケートフォームとして自動提案' },
+        { icon: <Megaphone className="w-4 h-4 text-emerald-600" />, title: 'メンバーからのフォーム申請', desc: 'メンバーが自発的に問いたいことをボトムアップで問いをフォーム化し管理者へ承認申請' },
+        { icon: <Download className="w-4 h-4 text-emerald-600" />, title: '外部フォームのインポート', desc: 'Googleフォームなどの外部フォームの回答をCSVで一括取り込みすることも可能' },
       ],
     },
     {
@@ -210,11 +213,11 @@ export default function LandingPage() {
       bgColor: 'bg-blue-50/60',
       borderColor: 'border-blue-300',
       icon: <BarChart3 className="w-6 h-6" />,
-      description: '個人のバイアスを超えて、自分以外の集団がどのような意見傾向を持つかをAIが客観的に可視化。多数意見に埋もれがちな少数派の声も救い上げます。',
+      description: '個人のバイアスを超えて、自分以外の他者がどのような意見を持つか、集団内の意見傾向をAIが客観的に可視化。多数派の声に埋もれがちな少数派の小さな声も救い上げます。',
       bullets: [
-        { icon: <Filter className="w-4 h-4 text-blue-600" />, title: 'クラスタリング', desc: '多数の意見をカテゴライズし認識しやすい形に整理' },
+        { icon: <Filter className="w-4 h-4 text-blue-600" />, title: 'クラスタリング', desc: '膨大な意見をカテゴライズし、認識しやすい形に整理' },
         { icon: <ListChecks className="w-4 h-4 text-blue-600" />, title: '課題リスト', desc: '多数の意見を要約し、取り組むべき課題を自動抽出・リスト化' },
-        { icon: <Star className="w-4 h-4 text-blue-600" />, title: 'Small Voice（外れ値）検出', desc: '少数派の意見も独立したトピックとして抽出・保持。潜在リスクや革新的アイデアを対話のテーブルへ' },
+        { icon: <Star className="w-4 h-4 text-blue-600" />, title: 'Small Voice（外れ値）検出', desc: '少数派の意見も独立したトピックとして抽出・保持。集団に埋もれがちな革新的アイデアや視点も対話のテーブルへ導く' },
       ],
     },
     {
@@ -225,25 +228,25 @@ export default function LandingPage() {
       bgColor: 'bg-violet-50/60',
       borderColor: 'border-violet-300',
       icon: <MessageSquare className="w-6 h-6" />,
-      description: '可視化された集団の意見を踏まえ、互いの意見の隔たりを含めて架け橋となる政策をグループで話し合います。',
+      description: '可視化された集団の意見傾向を踏まえ、個人のバイアスを超えた意見の架け橋となるようなアイデアを、全員が参加しやすい少人数グループで議論します。',
       bullets: [
-        { icon: <Shuffle className="w-4 h-4 text-violet-600" />, title: 'ランダムグループ割り当て', desc: '議論しやすい少人数グループにランダムで配置' },
-        { icon: <Users className="w-4 h-4 text-violet-600" />, title: 'グループ専用チャット空間', desc: '各グループが独立した対話スペースを持つ' },
-        { icon: <Bot className="w-4 h-4 text-violet-600" />, title: 'AIファシリテーター', desc: '中立的立場で議論をリードし、合意形成をサポート' },
+        { icon: <Shuffle className="w-4 h-4 text-violet-600" />, title: 'ランダムグループ割り当て', desc: '組織内のメンバーを、普段の人間関係や役職に捉われず、議論しやすい少人数グループにランダムで配置' },
+        { icon: <Users className="w-4 h-4 text-violet-600" />, title: 'グループ専用チャット空間', desc: '各グループが独立した対話スペースを持ち、意見を自由に交換' },
+        { icon: <Bot className="w-4 h-4 text-violet-600" />, title: 'AIファシリテーター', desc: 'AIが中立的な立場で議論の要点などを適宜整理し、合意形成をサポート' },
       ],
     },
     {
       id: 4,
-      title: 'グループごとの政策を立案',
+      title: 'グループごとの政策立案',
       subtitle: '政策管理フェーズ',
       color: '#d97706',
       bgColor: 'bg-amber-50/60',
       borderColor: 'border-amber-300',
       icon: <ClipboardList className="w-6 h-6" />,
-      description: '議論から生まれたアイデアを、具体的な政策として立案・管理・実行まで一貫して追跡します。',
+      description: '各グループの議論から生まれたアイデアを具体的な政策として立案し、メンバー全員が投票することで、組織として取り組むべき政策を決定します。',
       bullets: [
-        { icon: <ListChecks className="w-4 h-4 text-amber-600" />, title: 'Todoリスト形式の政策管理', desc: '立案〜実行まで進捗を可視化して管理' },
-        { icon: <Star className="w-4 h-4 text-amber-600" />, title: 'メンバーによる5段階の重み付き投票', desc: 'それぞれの政策に対してメンバーが重み（1〜5）を持たせて投票' },
+        { icon: <ListChecks className="w-4 h-4 text-amber-600" />, title: 'Todoリスト形式の政策管理', desc: '立案された政策はステータスと共に一元管理され、全体の進捗状況や対応結果を組織全体で透明性をもって追跡可能' },
+        { icon: <Star className="w-4 h-4 text-amber-600" />, title: 'メンバーによる5段階の重み付き投票', desc: '既存の賛成反対のゼロイチ式投票ではなく、それぞれの政策に対してメンバーが重みを持たせて投票することで、より柔軟な意志反映に基づく政策決定が可能' },
       ],
     },
     {
@@ -306,21 +309,15 @@ export default function LandingPage() {
 
       <main className="max-w-6xl mx-auto px-4 py-12 sm:px-6 lg:px-8 space-y-16">
 
-        {/* 特別セクション: Small Voiceについて */}
-        <section className="bg-white/40 backdrop-blur-xl rounded-3xl p-8 sm:p-12 border border-white/60 shadow-xl ring-1 ring-sage-900/5">
-          {/* Section Header */}
-          <div className="text-center mb-12">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 mb-6 text-xs font-bold tracking-widest text-sage-700 uppercase bg-sage-100 rounded-full border border-sage-200">
-              <Star className="w-3.5 h-3.5 fill-sage-600 text-sage-600" />
-              Core Concept
-            </div>
-            <h2 className="text-4xl sm:text-5xl font-black text-slate-900 mb-6 tracking-tight">
-              🍃 Small Voiceについて
-            </h2>
-            <p className="text-slate-600 max-w-4xl mx-auto text-lg leading-relaxed font-medium">
-              Small Voiceの核心は、<br className="hidden md:inline" />
-              <strong className="text-sage-900 font-extrabold underline decoration-sage-300 decoration-4 underline-offset-4">問題提起 → 意見の可視化 → 対話 → 立案実行 → フィードバック</strong><br />
-              をシームレスかつ反復的に実現するサイクル設計にあります。
+        {/* 1. Small Voiceについて */}
+        <section className="bg-white/60 backdrop-blur-md rounded-2xl p-5 sm:p-8 border border-white/50 shadow-sm">
+          <h2 className="text-2xl font-bold flex items-center gap-3 mb-6 text-sage-900 border-b border-sage-200 pb-2">
+            <Star className="w-6 h-6 text-sage-600" />
+            1. 🍃 Small Voiceについて
+          </h2>
+          <div className="mb-12">
+            <p className="text-slate-600 leading-relaxed">
+              Small Voiceの核心は、<br /><strong className="text-sage-900 font-extrabold underline decoration-sage-300 decoration-4 underline-offset-4">①多様なチャネルからの問題提起 →②組織内の意見傾向の可視化 → ③少人数グループでの対話 → ④グループごとの政策立案 → ⑤政策FB</strong><br />をシームレスかつ反復的に実現するサイクルにあります。
             </p>
           </div>
 
@@ -333,27 +330,9 @@ export default function LandingPage() {
             {cycleSteps.slice(0, 4).map((step) => (
               <StepCard key={step.id} step={step} />
             ))}
-            <div className="md:col-span-2">
-              <div className={`rounded-2xl border-2 ${cycleSteps[4].borderColor} ${cycleSteps[4].bgColor} px-8 py-8 shadow-sm text-center`}>
-                <div className="flex items-center justify-center gap-4 mb-4">
-                  <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-white shadow-md transform -rotate-3"
-                    style={{ backgroundColor: cycleSteps[4].color }}>
-                    {cycleSteps[4].icon}
-                  </div>
-                  <div className="text-left">
-                    <h3 className="text-xl font-black" style={{ color: cycleSteps[4].color }}>{cycleSteps[4].title}</h3>
-                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">{cycleSteps[4].subtitle}</p>
-                  </div>
-                </div>
-                <p className="text-base text-slate-600 leading-relaxed mb-6 max-w-2xl mx-auto">{cycleSteps[4].description}</p>
-                <ul className="flex flex-wrap justify-center gap-x-8 gap-y-3">
-                  {cycleSteps[4].bullets.map((b, i) => (
-                    <li key={i} className="flex items-start gap-2.5 text-sm font-medium text-slate-700">
-                      <span className="shrink-0 mt-0.5">{b.icon}</span>
-                      <span><span className="font-bold">{b.title}</span>{b.desc ? `：${b.desc}` : ''}</span>
-                    </li>
-                  ))}
-                </ul>
+            <div className="md:col-span-2 flex justify-center">
+              <div className="w-full md:max-w-md">
+                <StepCard step={cycleSteps[4]} />
               </div>
             </div>
 
@@ -390,7 +369,7 @@ export default function LandingPage() {
             <div className="inline-flex items-center gap-3 mb-8 px-5 py-2 bg-sage-50 rounded-2xl border border-sage-100">
               <Server className="w-5 h-5 text-sage-600" />
               <h3 className="text-lg font-black text-sage-900 tracking-tight">
-                🏗️ 拡張性と安全性を備えた基盤機能
+                🏗️ その他の特徴
               </h3>
             </div>
             <div className="grid sm:grid-cols-2 gap-8 items-stretch">
@@ -403,10 +382,10 @@ export default function LandingPage() {
                   <h4 className="text-xl font-black text-slate-900">柔軟な組織管理</h4>
                 </div>
                 <p className="text-sm text-slate-500 mb-6 leading-relaxed font-medium">
-                  組織の実態に即して、部署やプロジェクト単位で独立した管理空間（テナント）を柔軟に作成・運用できます。
+                  組織の実態に即して、部署やプロジェクト単位で独立した管理空間を柔軟に作成・運用できます。
                 </p>
-                <div className="space-y-4 mt-auto">
-                  <div className="bg-sage-50/50 p-4 rounded-2xl border border-sage-100/50">
+                <div className="flex flex-col gap-4 flex-1">
+                  <div className="bg-sage-50/50 p-4 rounded-2xl border border-sage-100/50 flex-1 flex flex-col justify-center">
                     <h5 className="font-bold text-sage-900 mb-1 flex items-center gap-2 text-sm">
                       <CheckCircle2 className="w-4 h-4 text-sage-600" /> 多重所属に対応
                     </h5>
@@ -414,7 +393,7 @@ export default function LandingPage() {
                       複数の組織に同時に所属可能。横断的なプロジェクトにも適応します。
                     </p>
                   </div>
-                  <div className="bg-sage-50/50 p-4 rounded-2xl border border-sage-100/50">
+                  <div className="bg-sage-50/50 p-4 rounded-2xl border border-sage-100/50 flex-1 flex flex-col justify-center">
                     <h5 className="font-bold text-sage-900 mb-1 flex items-center gap-2 text-sm">
                       <CheckCircle2 className="w-4 h-4 text-sage-600" /> 実態に即した管理
                     </h5>
@@ -422,7 +401,7 @@ export default function LandingPage() {
                       全社・部署・案件など、様々なスケールのグループで運用・分析できます。
                     </p>
                   </div>
-                  <div className="bg-sage-50/50 p-4 rounded-2xl border border-sage-100/50">
+                  <div className="bg-sage-50/50 p-4 rounded-2xl border border-sage-100/50 flex-1 flex flex-col justify-center">
                     <h5 className="font-bold text-sage-900 mb-1 flex items-center gap-2 text-sm">
                       <CheckCircle2 className="w-4 h-4 text-sage-600" /> セキュアな分離
                     </h5>
@@ -444,8 +423,8 @@ export default function LandingPage() {
                 <p className="text-sm text-slate-500 mb-6 leading-relaxed font-medium">
                   プラットフォーム全体と組織内の運用を分離し、役割に応じた明確で安全なアクセス制御を提供します。
                 </p>
-                <div className="space-y-4 mt-auto">
-                  <div className="bg-purple-50/50 p-4 rounded-2xl border border-purple-100/50">
+                <div className="flex flex-col gap-4 flex-1">
+                  <div className="bg-purple-50/50 p-4 rounded-2xl border border-purple-100/50 flex-1 flex flex-col justify-center">
                     <h5 className="font-bold text-purple-900 mb-1 flex items-center gap-2 text-sm">
                       <Shield className="w-4 h-4 text-purple-600" /> システム管理者
                     </h5>
@@ -453,7 +432,7 @@ export default function LandingPage() {
                       システム全体の統括。組織の作成や全ユーザーの管理権限を持ちます。
                     </p>
                   </div>
-                  <div className="bg-amber-50/50 p-4 rounded-2xl border border-amber-100/50">
+                  <div className="bg-amber-50/50 p-4 rounded-2xl border border-amber-100/50 flex-1 flex flex-col justify-center">
                     <h5 className="font-bold text-amber-900 mb-1 flex items-center gap-2 text-sm">
                       <Shield className="w-4 h-4 text-amber-600" /> 組織管理者
                     </h5>
@@ -461,7 +440,7 @@ export default function LandingPage() {
                       所属組織内のフォーム作成・管理、分析実行・結果管理を行います。
                     </p>
                   </div>
-                  <div className="bg-slate-50/50 p-4 rounded-2xl border border-slate-200/50">
+                  <div className="bg-slate-50/50 p-4 rounded-2xl border border-slate-200/50 flex-1 flex flex-col justify-center">
                     <h5 className="font-bold text-slate-700 mb-1 flex items-center gap-2 text-sm">
                       <User className="w-4 h-4 text-slate-500" /> 一般メンバー
                     </h5>
@@ -475,11 +454,11 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* 1. ブロードリスニングとは */}
+        {/* 2. ブロードリスニングとは */}
         <section className="bg-white/60 backdrop-blur-md rounded-2xl p-5 sm:p-8 border border-white/50 shadow-sm">
           <h2 className="text-2xl font-bold flex items-center gap-3 mb-6 text-sage-900 border-b border-sage-200 pb-2">
             <Brain className="w-6 h-6 text-sage-600" />
-            1. 🔍 ブロードリスニングとは
+            2. 🔍 ブロードリスニングとは
           </h2>
           <div className="space-y-6">
             <p className="text-slate-600 leading-relaxed mb-5">
@@ -501,11 +480,11 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* 2. デモ動画 */}
+        {/* 3. デモ動画 */}
         <section className="bg-white/60 backdrop-blur-md rounded-2xl p-5 sm:p-8 border border-white/50 shadow-sm">
           <h2 className="text-2xl font-bold flex items-center gap-3 mb-6 text-sage-900 border-b border-sage-200 pb-2">
             <Play className="w-6 h-6 text-sage-600" />
-            🎬 2. デモ動画
+            🎬 3. デモ動画
           </h2>
           <div className="aspect-video w-full rounded-2xl overflow-hidden shadow-lg border border-sage-200 bg-black">
             <iframe
@@ -520,11 +499,11 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* 3. デモ公開URL */}
+        {/* 4. デモ公開URL */}
         <section className="bg-white/60 backdrop-blur-md rounded-2xl p-5 sm:p-8 border border-white/50 shadow-sm hover:shadow-md transition-shadow">
           <h2 className="text-2xl font-bold flex items-center gap-3 mb-6 text-sage-900 border-b border-sage-200 pb-2">
             <Globe className="w-6 h-6 text-sage-600" />
-            3. 🔗 デモ公開URL
+            4. 🔗 デモ公開URL
           </h2>
           <div className="space-y-4">
             <div>
@@ -562,11 +541,11 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* 4. デモ用ユーザー */}
+        {/* 5. デモ用ユーザー */}
         <section className="bg-white/60 backdrop-blur-md rounded-2xl p-5 sm:p-8 border border-white/50 shadow-sm">
           <h2 className="text-2xl font-bold flex items-center gap-3 mb-6 text-sage-900 border-b border-sage-200 pb-2">
             <User className="w-6 h-6 text-sage-600" />
-            👤 4. デモ用ユーザー
+            👤 5. デモ用ユーザー
           </h2>
 
           <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
@@ -614,11 +593,11 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* 5. テスト用レポートデータ */}
+        {/* 6. テスト用レポートデータ */}
         <section className="bg-white/60 backdrop-blur-md rounded-2xl p-5 sm:p-8 border border-white/50 shadow-sm">
           <h2 className="text-2xl font-bold flex items-center gap-3 mb-6 text-sage-900 border-b border-sage-200 pb-2">
             <Database className="w-6 h-6 text-sage-600" />
-            📦 5. テスト用レポートデータ
+            📦 6. テスト用レポートデータ
           </h2>
           <div className="bg-slate-50/50 rounded-2xl p-6 text-center border border-slate-200">
             <p className="text-slate-600 mb-6 leading-relaxed">
@@ -636,11 +615,11 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* 6. 補足事項 */}
+        {/* 7. 補足事項 */}
         <section className="bg-white/60 backdrop-blur-md rounded-2xl p-5 sm:p-8 border border-white/50 shadow-sm">
           <h2 className="text-2xl font-bold flex items-center gap-3 mb-6 text-sage-900 border-b border-sage-200 pb-2">
             <Info className="w-6 h-6 text-sage-600" />
-            📌 6. 補足事項
+            📌 7. 補足事項
           </h2>
           <div className="bg-white p-5 sm:p-8 rounded-2xl border border-slate-200 shadow-sm">
             <ul className="space-y-4 text-slate-600 leading-relaxed list-inside">
@@ -666,6 +645,6 @@ export default function LandingPage() {
         <p>© 2026 Small Voice Project.</p>
         <p className="mt-2 text-xs">Created for Hackathon Submission</p>
       </footer>
-    </div>
+    </div >
   );
 }
