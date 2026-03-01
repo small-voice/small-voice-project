@@ -283,6 +283,7 @@ export default function LandingPage() {
               href="/login"
               target="_blank"
               rel="noopener noreferrer"
+              prefetch={false}
               className="px-8 py-4 bg-sage-600 hover:bg-sage-700 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1 flex items-center gap-2 group"
             >
               <ExternalLink className="w-5 h-5 group-hover:rotate-45 transition-transform" />
