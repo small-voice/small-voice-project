@@ -226,7 +226,7 @@ class Policy(Base):
     evaluations = relationship("PolicyEvaluation", back_populates="policy", cascade="all, delete-orphan")
 
 class PolicyEvaluation(Base):
-    """政策への評価"""
+    """政策への投票"""
     __tablename__ = "policy_evaluations"
     id = Column(Integer, primary_key=True, index=True)
     policy_id = Column(Integer, ForeignKey("policies.id"))

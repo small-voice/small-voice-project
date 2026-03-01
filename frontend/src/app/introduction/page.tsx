@@ -243,7 +243,7 @@ export default function LandingPage() {
       description: '議論から生まれたアイデアを、具体的な政策として立案・管理・実行まで一貫して追跡します。',
       bullets: [
         { icon: <ListChecks className="w-4 h-4 text-amber-600" />, title: 'Todoリスト形式の政策管理', desc: '立案〜実行まで進捗を可視化して管理' },
-        { icon: <Star className="w-4 h-4 text-amber-600" />, title: 'メンバーによる5段階評価', desc: 'それぞれの政策に対してメンバーが評価を実施' },
+        { icon: <Star className="w-4 h-4 text-amber-600" />, title: 'メンバーによる5段階の重み付き投票', desc: 'それぞれの政策に対してメンバーが重み（1〜5）を持たせて投票' },
       ],
     },
     {

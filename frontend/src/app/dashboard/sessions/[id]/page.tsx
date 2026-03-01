@@ -591,7 +591,7 @@ function SessionDetailContent() {
       const res = await axios.get(`/api/dashboard/sessions/${id}`, { withCredentials: true });
       setData(res.data);
     } catch (e) {
-      alert("評価に失敗しました");
+      alert("投票に失敗しました");
     } finally {
       setIsUpdating(false);
     }
@@ -1476,8 +1476,8 @@ function SessionDetailContent() {
                             {/* Policy Evaluations */}
                             <div className="mt-4 p-3 bg-slate-50 rounded-md border border-slate-100 flex items-center justify-between">
                               <div className="flex-1">
-                                <p className="text-xs font-bold text-slate-600 mb-1">この政策を評価する</p>
-                                <p className="text-[10px] text-slate-400">賛同度や期待度を5段階で評価してください</p>
+                                <p className="text-xs font-bold text-slate-600 mb-1">この政策に投票する</p>
+                                <p className="text-[10px] text-slate-400">5段階の重さ（ウエイト）を持たせて投票してください</p>
                               </div>
                               <div className="flex items-center gap-1">
                                 {(() => {
