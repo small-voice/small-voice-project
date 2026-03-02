@@ -198,10 +198,10 @@ export default function LandingPage() {
       bgColor: 'bg-emerald-50/60',
       borderColor: 'border-emerald-300',
       icon: <FileText className="w-6 h-6" />,
-      description: '多様なチャネルを通じて組織の声を収集する。ただし、個人の意見には特有の背景によるバイアスが含まれるため、単に集約するだけでは、組織全体の合意形成や本質的な課題解決に繋げるのは難しい。',
+      description: '多様なアプローチを通じて組織の声を収集します。ただし、個人の意見には各人の背景によるバイアスが含まれるため、単に集約するだけでは、組織全体の合意形成や本質的な課題解決に繋げるのは難しい。',
       bullets: [
         { icon: <MessageSquare className="w-4 h-4 text-emerald-600" />, title: '雑談掲示板からのフォーム作成', desc: 'メンバーの日常の声をAIが分析し、集計すべき情報をアンケートフォームとして自動提案' },
-        { icon: <Megaphone className="w-4 h-4 text-emerald-600" />, title: 'メンバーからのフォーム申請', desc: 'メンバーが自発的に問いたいことをボトムアップで問いをフォーム化し管理者へ承認申請' },
+        { icon: <Megaphone className="w-4 h-4 text-emerald-600" />, title: 'メンバーからのフォーム申請', desc: 'メンバーが自発的に問いたいことをボトムアップでフォーム化し管理者へ承認申請' },
         { icon: <Download className="w-4 h-4 text-emerald-600" />, title: '外部フォームのインポート', desc: 'Googleフォームなどの外部フォームの回答をCSVで一括取り込みすることも可能' },
       ],
     },
@@ -318,7 +318,7 @@ export default function LandingPage() {
           </h2>
           <div className="mb-12">
             <p className="text-slate-600 leading-relaxed">
-              Small Voiceの核心は、<br /><strong className="text-sage-900 font-extrabold underline decoration-sage-300 decoration-4 underline-offset-4">①多様なチャネルからの問題提起 →②組織内の意見傾向の可視化 → ③少人数グループでの対話 → ④グループごとの政策立案 → ⑤政策FB</strong><br />をシームレスかつ反復的に実現するサイクルにあります。
+              Small Voiceの核心は、<br /><strong className="text-sage-900 font-extrabold underline decoration-sage-300 decoration-4 underline-offset-4">①多様なアプローチからの問題提起 →②組織内の意見傾向の可視化 → ③少人数グループでの対話 → ④グループごとの政策立案 → ⑤政策FB</strong><br />をシームレスかつ反復的に実現するサイクルにあります。
             </p>
           </div>
 
