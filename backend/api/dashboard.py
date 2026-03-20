@@ -406,23 +406,27 @@ def evaluate_policy(
         raise HTTPException(status_code=404, detail="Permission denied")
         
     # Validate rating
-    if payload.rating < 1 or payload.rating > 5:
-        raise HTTPException(status_code=400, detail="Rating must be between 1 and 5")
+    if payload.rating < 0 or payload.rating > 5:
+        raise HTTPException(status_code=400, detail="Rating must be between 0 and 5")
         
     evaluation = db.query(PolicyEvaluation).filter(
         PolicyEvaluation.policy_id == policy_id,
         PolicyEvaluation.user_id == current_user.id
     ).first()
     
-    if evaluation:
-        evaluation.rating = payload.rating
+    if payload.rating == 0:
+        if evaluation:
+            db.delete(evaluation)
     else:
-        evaluation = PolicyEvaluation(
-            policy_id=policy_id,
-            user_id=current_user.id,
-            rating=payload.rating
-        )
-        db.add(evaluation)
+        if evaluation:
+            evaluation.rating = payload.rating
+        else:
+            evaluation = PolicyEvaluation(
+                policy_id=policy_id,
+                user_id=current_user.id,
+                rating=payload.rating
+            )
+            db.add(evaluation)
         
     db.commit()
     return {"message": "Success"}

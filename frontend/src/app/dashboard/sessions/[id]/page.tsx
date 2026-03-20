@@ -1477,7 +1477,7 @@ function SessionDetailContent() {
                             <div className="mt-4 p-3 bg-slate-50 rounded-md border border-slate-100 flex items-center justify-between">
                               <div className="flex-1">
                                 <p className="text-xs font-bold text-slate-600 mb-1">この政策に投票する</p>
-                                <p className="text-[10px] text-slate-400">5段階の重さ（ウエイト）を持たせて投票してください</p>
+                                <p className="text-[10px] text-slate-400">5段階の重さ（ウエイト）を持たせて投票してください（同じ星の再クリックでリセット）</p>
                               </div>
                               <div className="flex items-center gap-1">
                                 {(() => {
@@ -1491,7 +1491,11 @@ function SessionDetailContent() {
                                         <button
                                           key={i}
                                           disabled={isUpdating}
-                                          onClick={(e) => { e.stopPropagation(); handleEvaluatePolicy(policy.id, i + 1); }}
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            const newRating = (myEval && myEval.rating === i + 1) ? 0 : i + 1;
+                                            handleEvaluatePolicy(policy.id, newRating);
+                                          }}
                                           className={`text-lg p-0.5 transition-colors focus:outline-none ${myEval && myEval.rating >= i + 1 ? 'text-yellow-400' : 'text-slate-300 hover:text-yellow-300'}`}
                                         >
                                           ★
