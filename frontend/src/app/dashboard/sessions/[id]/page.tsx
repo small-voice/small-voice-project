@@ -1482,7 +1482,8 @@ function SessionDetailContent() {
                               <div className="flex items-center gap-1">
                                 {(() => {
                                   const evaluations = policy.evaluations || [];
-                                  const average = evaluations.length > 0 ? (evaluations.reduce((a: any, b: any) => a + b.rating, 0) / evaluations.length).toFixed(1) : 0;
+                                  const totalScore = evaluations.reduce((a: any, b: any) => a + b.rating, 0);
+                                  const average = evaluations.length > 0 ? (totalScore / evaluations.length).toFixed(1) : "0.0";
                                   const myEval = user && evaluations.find((e: any) => e.user_id === user.id);
 
                                   return (
@@ -1501,9 +1502,18 @@ function SessionDetailContent() {
                                           ★
                                         </button>
                                       ))}
-                                      <div className="ml-3 flex items-center gap-1.5">
-                                        <span className="text-xs font-bold text-slate-700">{average}</span>
-                                        <span className="text-[10px] text-slate-400">({evaluations.length}件)</span>
+
+                                      <div className="ml-4 flex items-center gap-3 border-l-2 pl-3 border-slate-200">
+                                        <div className="flex flex-col items-center">
+                                          <span className="text-[9px] text-slate-400 font-bold mb-0.5">合計スコア</span>
+                                          <span className="text-lg font-black text-sage-600 leading-none">{totalScore}</span>
+                                        </div>
+                                        <div className="flex flex-col items-center border-l border-slate-200 pl-3">
+                                          <span className="text-[9px] text-slate-400 font-bold mb-0.5">平均・投票数</span>
+                                          <div className="flex items-baseline gap-0.5 text-[10px] text-slate-500 font-medium leading-none">
+                                            <span className="text-xs text-slate-700 font-bold">{average}</span><span className="text-[10px]"> / {evaluations.length}人</span>
+                                          </div>
+                                        </div>
                                       </div>
                                     </>
                                   );
