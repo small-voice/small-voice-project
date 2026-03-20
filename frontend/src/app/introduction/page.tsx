@@ -318,7 +318,7 @@ export default function LandingPage() {
           </h2>
           <div className="mb-12">
             <p className="text-slate-600 leading-relaxed">
-              Small Voiceの核心は、<br /><strong className="text-sage-900 font-extrabold underline decoration-sage-300 decoration-4 underline-offset-4">①多様なアプローチからの問題提起 →②組織内の意見傾向の可視化 → ③少人数グループでの対話 → ④グループごとの政策立案 → ⑤政策FB</strong><br />をシームレスかつ反復的に実現するサイクルにあります。
+              Small Voiceはフィクションである民主主義の真の実現を目指します。<br />そのためにAIの力を借り、<strong className="text-sage-900 font-extrabold underline decoration-sage-300 decoration-4 underline-offset-4">①多様なアプローチからの問題提起 →②組織内の意見傾向の可視化 → ③少人数グループでの対話 → ④グループごとの政策立案 → ⑤政策FB</strong><br />のサイクルを広範囲かつ高速に実現するシステムを構築。
             </p>
           </div>
 
