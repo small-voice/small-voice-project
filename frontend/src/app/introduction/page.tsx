@@ -1,7 +1,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import {
-  Github, Play, ExternalLink, User, Shield, Users, Server, Database,
+  Github, Play, ExternalLink, User, Shield, Users, Server,
   Brain, Globe, Lock, Download, Info, CheckCircle2, MessageSquare,
   BarChart3, ListChecks, Vote, RefreshCw, FileText, ArrowRight,
   Megaphone, Filter, Shuffle, Bot, ClipboardList, Star
@@ -198,7 +198,7 @@ export default function LandingPage() {
       bgColor: 'bg-emerald-50/60',
       borderColor: 'border-emerald-300',
       icon: <FileText className="w-6 h-6" />,
-      description: '多様なアプローチを通じて組織の声を収集します。ただし、個人の意見には各人の背景によるバイアスが含まれるため、単に集約するだけでは、組織全体の合意形成や本質的な課題解決に繋げるのは難しい。',
+      description: '多様なアプローチを通じて組織の声を収集します。ただし、個人の意見には一定のバイアスが含まれるため、単に集約するだけでは、組織全体の合意形成や本質的な課題解決に繋げるのは難しい。',
       bullets: [
         { icon: <MessageSquare className="w-4 h-4 text-emerald-600" />, title: '雑談掲示板からのフォーム作成', desc: 'メンバーの日常の声をAIが分析し、集計すべき情報をアンケートフォームとして自動提案' },
         { icon: <Megaphone className="w-4 h-4 text-emerald-600" />, title: 'メンバーからのフォーム申請', desc: 'メンバーが自発的に問いたいことをボトムアップでフォーム化し管理者へ承認申請' },
@@ -594,33 +594,11 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* 6. テスト用レポートデータ */}
-        <section className="bg-white/60 backdrop-blur-md rounded-2xl p-5 sm:p-8 border border-white/50 shadow-sm">
-          <h2 className="text-2xl font-bold flex items-center gap-3 mb-6 text-sage-900 border-b border-sage-200 pb-2">
-            <Database className="w-6 h-6 text-sage-600" />
-            📦 6. テスト用レポートデータ
-          </h2>
-          <div className="bg-slate-50/50 rounded-2xl p-6 text-center border border-slate-200">
-            <p className="text-slate-600 mb-6 leading-relaxed">
-              分析機能お試し用に、ダミーデータのセットを用意しました。<br />
-              ダウンロードしてCSVインポート機能から取り込むことで、すぐに分析を試すことができます。
-            </p>
-            <a
-              href="/downloads/sample_data.zip"
-              download
-              className="inline-flex items-center gap-3 px-8 py-4 bg-sage-600 hover:bg-sage-700 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1 group"
-            >
-              <Download className="w-5 h-5 group-hover:animate-bounce" />
-              テストデータ一括ダウンロード (ZIP)
-            </a>
-          </div>
-        </section>
-
-        {/* 7. 補足事項 */}
+        {/* 6. 補足事項 */}
         <section className="bg-white/60 backdrop-blur-md rounded-2xl p-5 sm:p-8 border border-white/50 shadow-sm">
           <h2 className="text-2xl font-bold flex items-center gap-3 mb-6 text-sage-900 border-b border-sage-200 pb-2">
             <Info className="w-6 h-6 text-sage-600" />
-            📌 7. 補足事項
+            📌 6. 補足事項
           </h2>
           <div className="bg-white p-5 sm:p-8 rounded-2xl border border-slate-200 shadow-sm">
             <ul className="space-y-4 text-slate-600 leading-relaxed list-inside">
@@ -628,10 +606,7 @@ export default function LandingPage() {
                 <span className="text-sage-500 font-bold shrink-0">•</span>
                 <span>デモ公開URLのログイン画面より、こちらに記載のデモ用ユーザーでログインし、自由に操作いただいて問題ありません。</span>
               </li>
-              <li className="flex gap-3">
-                <span className="text-sage-500 font-bold shrink-0">•</span>
-                <span>テスト用レポートデータも自由に使い、レポート分析を試してみてください。</span>
-              </li>
+
               <li className="flex gap-3">
                 <span className="text-sage-500 font-bold shrink-0">•</span>
                 <span>本システムはAIエージェント「Antigravity」を活用したバイブコーディングにより、そのほとんどを開発しました。</span>
